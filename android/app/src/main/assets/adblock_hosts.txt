@@ -1,0 +1,98 @@
+# ============================================
+# WebHub Ad & Tracking Host Blocklist
+# ============================================
+# Format: one domain per line. Lines starting with # are comments.
+# Used by AdBlocker.kt to filter WebView requests.
+#
+# Last updated: 2025
+# ============================================
+
+# ---- Google Ads ----
+doubleclick.net
+www.doubleclick.net
+ad.doubleclick.net
+googleadservices.com
+www.googleadservices.com
+googleads.g.doubleclick.net
+pagead2.googlesyndication.com
+pagead2.googlesyndication.cn
+partner.googleadservices.com
+adsense.google.com
+adservice.google.com
+adservice.google.com.tr
+adservice.google.co.uk
+adservice.google.de
+adservice.google.fr
+adservice.google.co.in
+adservice.google.co.jp
+
+# ---- Google Analytics ----
+google-analytics.com
+www.google-analytics.com
+ssl.google-analytics.com
+
+# ---- Meta / Facebook ----
+facebook.net
+www.facebook.net
+connect.facebook.net
+fbcdn.net
+static.ads-twitter.com
+analytics.facebook.com
+pixel.facebook.com
+an.facebook.com
+
+# ---- Amazon Ads ----
+amazon-adsystem.com
+aax-us-east.amazon-adsystem.com
+ad.amazon.com
+serving-sys.com
+
+# ---- Yahoo / Oath ----
+ads.yahoo.com
+adsonar.yahoo.com
+yieldmanager.yahoo.com
+
+# ---- Microsoft Ads ----
+ads.bing.com
+ads.microsoft.com
+static.ads-twitter.com
+
+# ---- Other Major Ad Networks ----
+adnxs.com
+www.adnxs.com
+adsrvr.org
+casalemedia.com
+rubiconproject.com
+openx.net
+pubmatic.com
+indexexchange.com
+sharethrough.com
+criteo.com
+taboola.com
+outbrain.com
+mgid.com
+revcontent.com
+
+# ---- Tracking / Analytics ----
+hotjar.com
+static.hotjar.com
+mixpanel.com
+segment.io
+analytics.tiktok.com
+segment-analytics.com
+fullstory.com
+mouseflow.com
+crazyegg.com
+scorecardresearch.com
+quantserve.com
+
+# ---- Misc Ad-related ----
+ad.collegehumor.com
+ad.turn.com
+advertising.com
+atdmt.com
+bluekai.com
+bkrtx.com
+demdex.net
+moatads.com
+eu-adsense-1.ebay.com

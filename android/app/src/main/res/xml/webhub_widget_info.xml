@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Minimum dimensions -->
+    android:minWidth="180dp"
+    android:minHeight="40dp"
+
+    <!-- Target cell size for home-screen placement -->
+    android:targetCellWidth="3"
+    android:targetCellHeight="1"
+
+    <!-- Update every 30 minutes -->
+    android:updatePeriodMillis="1800000"
+
+    <!-- Allow the widget to resize horizontally and vertically -->
+    android:resizeMode="horizontal|vertical"
+
+    <!-- Widget preview / description -->
+    android:previewLayout="@layout/webhub_widget"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/webhub_widget"
+
+    <!-- Widget category – home screen only -->
+    android:widgetCategory="home_screen"
+
+    <!-- Do not show in the keyguard / lockscreen -->
+    android:targetSdkVersion="36"
+
+</appwidget-provider>

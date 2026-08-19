@@ -56,5 +56,21 @@ skills/
 test
 prompt
 
+# Android
+*.apk
+*.aab
+*.ap_
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/.DS_Store
+android/captures/
+android/external-native-build/
+android/.cxx/
+android/app/release/
+
 # CLAUDE.md at root
 /CLAUDE.md
