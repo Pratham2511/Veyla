@@ -1,0 +1,1469 @@
+     1→     1→# WebHub — Native Android Conversion & Production Implementation Prompt
+     2→     2→
+     3→     3→## Mission
+     4→     4→
+     5→     5→You are working on the existing WebHub repository:
+     6→     6→
+     7→     7→https://github.com/Pratham2511/Webhub
+     8→     8→
+     9→     9→The repository currently contains a functional **Next.js web prototype** of WebHub.
+    10→    10→
+    11→    11→Your task is to turn the project into the **real WebHub Android application**.
+    12→    12→
+    13→    13→The Android application is the actual product target.
+    14→    14→
+    15→    15→The current web application is a **product/UI/behavior reference** only.
+    16→    16→
+    17→    17→Do NOT simply continue developing the Next.js application.
+    18→    18→
+    19→    19→Do NOT wrap the existing website inside Android.
+    20→    20→
+    21→    21→Do NOT use a WebView to display the Next.js WebHub itself.
+    22→    22→
+    23→    23→Do NOT use Capacitor.
+    24→    24→
+    25→    25→Do NOT use React Native.
+    26→    26→
+    27→    27→Do NOT use a PWA as the final Android product.
+    28→    28→
+    29→    29→Do NOT use iframes as the browser engine.
+    30→    30→
+    31→    31→Build a genuine native Android application.
+    32→    32→
+    33→    33→---
+    34→    34→
+    35→    35→# 1. First Audit the Existing Repository
+    36→    36→
+    37→    37→Before implementing anything, inspect the current repository completely.
+    38→    38→
+    39→    39→Understand the existing:
+    40→    40→
+    41→    41→- screens
+    42→    42→- navigation
+    43→    43→- tab behavior
+    44→    44→- workspace behavior
+    45→    45→- settings
+    46→    46→- onboarding
+    47→    47→- bookmarks
+    48→    48→- recently closed tabs
+    49→    49→- session management
+    50→    50→- per-tab settings
+    51→    51→- incognito behavior
+    52→    52→- hibernation behavior
+    53→    53→- theme behavior
+    54→    54→- responsive layout
+    55→    55→- database relationships
+    56→    56→- API behavior
+    57→    57→- UI hierarchy
+    58→    58→- existing edge cases
+    59→    59→- existing limitations
+    60→    60→
+    61→    61→The current repository contains concepts for:
+    62→    62→
+    63→    63→- Workspaces
+    64→    64→- Tabs
+    65→    65→- Bookmarks
+    66→    66→- Recently Closed Tabs
+    67→    67→- Session Snapshots
+    68→    68→- Global Settings
+    69→    69→- Incognito
+    70→    70→- JavaScript controls
+    71→    71→- Ad-block controls
+    72→    72→- CSS overrides
+    73→    73→- User scripts
+    74→    74→- Hibernation
+    75→    75→- Themes
+    76→    76→- Onboarding
+    77→    77→- Quick switching
+    78→    78→- Tab overview
+    79→    79→
+    80→    80→Preserve the useful product behavior and interaction ideas.
+    81→    81→
+    82→    82→However, replace the web implementation with a native Android implementation.
+    83→    83→
+    84→    84→Do not blindly translate React components line-by-line.
+    85→    85→
+    86→    86→---
+    87→    87→
+    88→    88→# 2. Critical Architecture Rule
+    89→    89→
+    90→    90→The final application must be:
+    91→    91→
+    92→    92→**Native Android + Kotlin + Jetpack Compose + Android WebView**
+    93→    93→
+    94→    94→The Android app must run independently from a browser.
+    95→    95→
+    96→    96→The application must be installable as an Android APK/AAB.
+    97→    97→
+    98→    98→The application must not require a Next.js server to function.
+    99→    99→
+   100→   100→The web prototype must not be the runtime dependency of the Android app.
+   101→   101→
+   102→   102→---
+   103→   103→
+   104→   104→# 3. Required Technology Stack
+   105→   105→
+   106→   106→Use the following architecture.
+   107→   107→
+   108→   108→## Language
+   109→   109→
+   110→   110→Kotlin only.
+   111→   111→
+   112→   112→Avoid Java unless a third-party API genuinely requires Java interoperability.
+   113→   113→
+   114→   114→## UI
+   115→   115→
+   116→   116→Jetpack Compose.
+   117→   117→
+   118→   118→Use Material 3 / Material You.
+   119→   119→
+   120→   120→Use Android `AndroidView` to embed the standard Android `WebView`.
+   121→   121→
+   122→   122→## Architecture
+   123→   123→
+   124→   124→Use:
+   125→   125→
+   126→   126→- MVVM
+   127→   127→- Repository pattern
+   128→   128→- Domain/use-case layer
+   129→   129→- Unidirectional data flow
+   130→   130→- Kotlin Coroutines
+   131→   131→- Kotlin Flow
+   132→   132→- Hilt
+   133→   133→
+   134→   134→ViewModels must not:
+   135→   135→
+   136→   136→- hold WebView references
+   137→   137→- hold Android View references
+   138→   138→- contain repository implementation logic
+   139→   139→- directly manipulate Room
+   140→   140→- directly manipulate network infrastructure
+   141→   141→
+   142→   142→UseCases handle business operations.
+   143→   143→
+   144→   144→Repositories handle persistence and infrastructure.
+   145→   145→
+   146→   146→---
+   147→   147→
+   148→   148→# 4. Android Targets
+   149→   149→
+   150→   150→Use:
+   151→   151→
+   152→   152→- minSdk = 29
+   153→   153→- targetSdk = 36
+   154→   154→- compileSdk = 36
+   155→   155→
+   156→   156→Production distribution:
+   157→   157→
+   158→   158→- Android App Bundle (`.aab`)
+   159→   159→
+   160→   160→Release ABI:
+   161→   161→
+   162→   162→- arm64-v8a
+   163→   163→
+   164→   164→Use appropriate debug ABIs only for development if necessary.
+   165→   165→
+   166→   166→---
+   167→   167→
+   168→   168→# 5. Real WebView Browser Engine
+   169→   169→
+   170→   170→This is the most important part of the project.
+   171→   171→
+   172→   172→Each active WebHub tab must have its own real Android `WebView`.
+   173→   173→
+   174→   174→Do not use HTML iframe tabs.
+   175→   175→
+   176→   176→Do not share a single WebView across all tabs.
+   177→   177→
+   178→   178→Create a dedicated WebView lifecycle/management layer.
+   179→   179→
+   180→   180→Conceptually include:
+   181→   181→
+   182→   182→- WebViewManager
+   183→   183→- WebHubWebViewClient
+   184→   184→- WebHubChromeClient
+   185→   185→- tab-to-WebView ownership
+   186→   186→- creation
+   187→   187→- destruction
+   188→   188→- restoration
+   189→   189→- thumbnail capture
+   190→   190→- loading progress
+   191→   191→- title updates
+   192→   192→- navigation state
+   193→   193→- downloads
+   194→   194→- permissions
+   195→   195→- fullscreen/video
+   196→   196→- renderer crash/error handling
+   197→   197→
+   198→   198→The WebView is the browser engine.
+   199→   199→
+   200→   200→The Compose UI is the native browser shell.
+   201→   201→
+   202→   202→---
+   203→   203→
+   204→   204→# 6. Tab Model
+   205→   205→
+   206→   206→A WebHub tab should persist at least:
+   207→   207→
+   208→   208→- id
+   209→   209→- workspaceId
+   210→   210→- url
+   211→   211→- title
+   212→   212→- faviconUrl
+   213→   213→- customName
+   214→   214→- customIconUri
+   215→   215→- isIncognito
+   216→   216→- isJsEnabled
+   217→   217→- isAdBlockEnabled
+   218→   218→- cssOverride
+   219→   219→- userScript
+   220→   220→- position
+   221→   221→- isHibernated
+   222→   222→- savedScrollY
+   223→   223→- createdAt
+   224→   224→- updatedAt
+   225→   225→
+   226→   226→Add other fields when technically justified.
+   227→   227→
+   228→   228→Do not persist entire WebView objects.
+   229→   229→
+   230→   230→Persist durable metadata in Room.
+   231→   231→
+   232→   232→---
+   233→   233→
+   234→   234→# 7. Room Database
+   235→   235→
+   236→   236→Replace Prisma/SQLite web persistence with:
+   237→   237→
+   238→   238→**Room over SQLite**
+   239→   239→
+   240→   240→Create entities for at least:
+   241→   241→
+   242→   242→- TabEntity
+   243→   243→- WorkspaceEntity
+   244→   244→- BookmarkEntity
+   245→   245→- ClosedTabHistoryEntity
+   246→   246→- SessionSnapshotEntity
+   247→   247→
+   248→   248→Use DAOs with:
+   249→   249→
+   250→   250→- CRUD
+   251→   251→- Flow-returning queries
+   252→   252→- transactional operations where needed
+   253→   253→- ordering by workspace/position
+   254→   254→
+   255→   255→Room is the authoritative persistent data layer for the Android application.
+   256→   256→
+   257→   257→Do not use:
+   258→   258→
+   259→   259→- Prisma
+   260→   260→- browser SQLite
+   261→   261→- IndexedDB
+   262→   262→- Zustand persistence
+   263→   263→- localStorage
+   264→   264→
+   265→   265→---
+   266→   266→
+   267→   267→# 8. DataStore
+   268→   268→
+   269→   269→Use Proto DataStore for app configuration.
+   270→   270→
+   271→   271→Persist settings including:
+   272→   272→
+   273→   273→- activeWorkspaceId
+   274→   274→- globalThemeMode
+   275→   275→- defaultWorkspaceId
+   276→   276→- isBiometricEnabled
+   277→   277→- adBlockEnabled
+   278→   278→- searchEngineUrl
+   279→   279→- hasCompletedOnboarding
+   280→   280→- HTTPS trust overrides
+   281→   281→- other global app configuration
+   282→   282→
+   283→   283→Do not use SharedPreferences as the main configuration layer.
+   284→   284→
+   285→   285→Use Android Keystore-backed secure storage for sensitive secrets.
+   286→   286→
+   287→   287→---
+   288→   288→
+   289→   289→# 9. Workspaces
+   290→   290→
+   291→   291→The central WebHub concept is:
+   292→   292→
+   293→   293→**one app → multiple named workspaces → persistent tabs inside each workspace**
+   294→   294→
+   295→   295→Examples:
+   296→   296→
+   297→   297→- Work
+   298→   298→- Personal
+   299→   299→- Finance
+   300→   300→- Social
+   301→   301→- Research
+   302→   302→- Entertainment
+   303→   303→
+   304→   304→Support:
+   305→   305→
+   306→   306→- create
+   307→   307→- rename
+   308→   308→- delete
+   309→   309→- reorder
+   310→   310→- switch
+   311→   311→- set default
+   312→   312→- workspace-specific theme
+   313→   313→- workspace-specific default URL
+   314→   314→- workspace-specific settings
+   315→   315→- tab counts
+   316→   316→
+   317→   317→Do not allow deleting the last remaining workspace unless you deliberately replace it with a new valid default.
+   318→   318→
+   319→   319→---
+   320→   320→
+   321→   321→# 10. Tab Management
+   322→   322→
+   323→   323→Implement:
+   324→   324→
+   325→   325→- add tab
+   326→   326→- close tab
+   327→   327→- switch tab
+   328→   328→- duplicate tab
+   329→   329→- reorder tab
+   330→   330→- move tab to workspace
+   331→   331→- rename tab
+   332→   332→- customize icon
+   333→   333→- make incognito
+   334→   334→- hibernate tab
+   335→   335→- restore tab
+   336→   336→- recently closed
+   337→   337→- bookmark
+   338→   338→- tab settings
+   339→   339→
+   340→   340→Support long-press/context actions using Android-native interaction patterns.
+   341→   341→
+   342→   342→Drag-and-drop should work naturally on Android touchscreens.
+   343→   343→
+   344→   344→---
+   345→   345→
+   346→   346→# 11. Main Browser Screen
+   347→   347→
+   348→   348→Create a native Compose main screen with:
+   349→   349→
+   350→   350→- active workspace
+   351→   351→- tab navigation
+   352→   352→- active WebView
+   353→   353→- omnibox
+   354→   354→- loading indicator
+   355→   355→- browser controls
+   356→   356→- workspace access
+   357→   357→- tab actions
+   358→   358→- settings access
+   359→   359→
+   360→   360→The WebView should occupy the majority of the available content area.
+   361→   361→
+   362→   362→Do not make the application look like a website running inside a webpage.
+   363→   363→
+   364→   364→Make it feel like a real Android browser/workspace application.
+   365→   365→
+   366→   366→---
+   367→   367→
+   368→   368→# 12. Omnibox
+   369→   369→
+   370→   370→Implement a native Android omnibox.
+   371→   371→
+   372→   372→It should:
+   373→   373→
+   374→   374→- accept URLs
+   375→   375→- accept search queries
+   376→   376→- normalize URLs
+   377→   377→- use configured search engine
+   378→   378→- indicate HTTPS
+   379→   379→- show loading state
+   380→   380→- support navigation submit
+   381→   381→- optionally show autocomplete/history
+   382→   382→
+   383→   383→Examples:
+   384→   384→
+   385→   385→`example.com` → navigate to HTTPS URL
+   386→   386→
+   387→   387→`openai` → search using configured search engine
+   388→   388→
+   389→   389→Do not hardcode only one search provider.
+   390→   390→
+   391→   391→---
+   392→   392→
+   393→   393→# 13. WebView Navigation
+   394→   394→
+   395→   395→Support:
+   396→   396→
+   397→   397→- back
+   398→   398→- forward
+   399→   399→- reload
+   400→   400→- stop
+   401→   401→- current URL
+   402→   402→- page title
+   403→   403→- progress
+   404→   404→- redirects
+   405→   405→- external intents where appropriate
+   406→   406→
+   407→   407→Back handling priority:
+   408→   408→
+   409→   409→1. dismiss transient UI
+   410→   410→2. navigate WebView history
+   411→   411→3. if history exhausted, prompt/perform tab close behavior as designed
+   412→   412→4. exit the relevant Android screen
+   413→   413→
+   414→   414→Use Android's current predictive back APIs.
+   415→   415→
+   416→   416→---
+   417→   417→
+   418→   418→# 14. WebView Configuration
+   419→   419→
+   420→   420→Apply secure WebView defaults.
+   421→   421→
+   422→   422→Evaluate and configure:
+   423→   423→
+   424→   424→- JavaScript
+   425→   425→- DOM storage
+   426→   426→- file access
+   427→   427→- content access
+   428→   428→- Safe Browsing
+   429→   429→- mixed content
+   430→   430→- geolocation
+   431→   431→- media permissions
+   432→   432→- downloads
+   433→   433→- popups
+   434→   434→- third-party content
+   435→   435→- external navigation
+   436→   436→- renderer process behavior
+   437→   437→
+   438→   438→Avoid enabling dangerous functionality globally.
+   439→   439→
+   440→   440→Do not introduce `addJavascriptInterface` unless absolutely necessary.
+   441→   441→
+   442→   442→---
+   443→   443→
+   444→   444→# 15. WebView State Persistence
+   445→   445→
+   446→   446→Be technically honest about WebView persistence.
+   447→   447→
+   448→   448→Store durable tab information in Room.
+   449→   449→
+   450→   450→Where appropriate, save:
+   451→   451→
+   452→   452→- URL
+   453→   453→- scroll position
+   454→   454→- navigation state
+   455→   455→- relevant WebView saved state
+   456→   456→
+   457→   457→Restore it when the tab's WebView is recreated.
+   458→   458→
+   459→   459→Do not claim that every DOM state, JavaScript runtime state, memory object, or authentication state can always be perfectly serialized.
+   460→   460→
+   461→   461→When WebView state cannot be preserved, restore the closest technically reliable state.
+   462→   462→
+   463→   463→---
+   464→   464→
+   465→   465→# 16. Tab Hibernation
+   466→   466→
+   467→   467→Hibernation must actually save resources.
+   468→   468→
+   469→   469→When hibernating:
+   470→   470→
+   471→   471→1. capture relevant state
+   472→   472→2. persist URL and scroll position
+   473→   473→3. persist other necessary metadata
+   474→   474→4. destroy WebView
+   475→   475→5. remove references
+   476→   476→6. release resources
+   477→   477→7. mark tab hibernated
+   478→   478→
+   479→   479→When restoring:
+   480→   480→
+   481→   481→1. create a new WebView
+   482→   482→2. apply tab settings
+   483→   483→3. restore saved state
+   484→   484→4. navigate if necessary
+   485→   485→5. restore scroll position
+   486→   486→6. mark active
+   487→   487→
+   488→   488→Do not implement hibernation as a UI-only boolean.
+   489→   489→
+   490→   490→Implement actual WebView destruction and recreation.
+   491→   491→
+   492→   492→---
+   493→   493→
+   494→   494→# 17. Memory Management
+   495→   495→
+   496→   496→Because WebView instances can consume substantial memory:
+   497→   497→
+   498→   498→- support configurable maximum active WebViews
+   499→   499→- maintain last-used information
+   500→   500→- hibernate least-recently-used inactive tabs when needed
+   501→   501→- respond to Android memory trim callbacks
+   502→   502→- keep only necessary WebViews alive
+   503→   503→- make active tab highest priority
+   504→   504→
+   505→   505→Do not promise unrealistic RAM consumption.
+   506→   506→
+   507→   507→Measure actual behavior.
+   508→   508→
+   509→   509→---
+   510→   510→
+   511→   511→# 18. Tab Thumbnails
+   512→   512→
+   513→   513→Create actual WebView thumbnails.
+   514→   514→
+   515→   515→Capture from the WebView itself.
+   516→   516→
+   517→   517→Store thumbnail images in app-private cache/storage.
+   518→   518→
+   519→   519→Do not place large bitmaps inside Room unless there is a very deliberate reason.
+   520→   520→
+   521→   521→Regenerate thumbnails when necessary.
+   522→   522→
+   523→   523→---
+   524→   524→
+   525→   525→# 19. Incognito Mode
+   526→   526→
+   527→   527→Incognito must be real, not cosmetic.
+   528→   528→
+   529→   529→Incognito tabs should:
+   530→   530→
+   531→   531→- minimize persistent storage
+   532→   532→- use appropriate no-cache configuration
+   533→   533→- avoid persisting session information
+   534→   534→- clean temporary browser state appropriately
+   535→   535→- clear cookies/cache on close where appropriate
+   536→   536→- not appear in normal persistent session restore unless explicitly designed
+   537→   537→- visibly identify private mode
+   538→   538→
+   539→   539→Do not overclaim what Android System WebView can guarantee.
+   540→   540→
+   541→   541→Validate behavior experimentally.
+   542→   542→
+   543→   543→---
+   544→   544→
+   545→   545→# 20. Cookie Isolation
+   546→   546→
+   547→   547→Implement carefully.
+   548→   548→
+   549→   549→WebHub requires per-tab/private browsing separation, but Android WebView cookie/storage APIs have platform constraints.
+   550→   550→
+   551→   551→Do not create a fake `CookieManager` object per tab and claim complete physical isolation unless the implementation actually provides it.
+   552→   552→
+   553→   553→Research and test the strongest technically valid isolation design.
+   554→   554→
+   555→   555→For ordinary tabs, maintain deterministic browser-state behavior.
+   556→   556→
+   557→   557→For incognito/private tabs, provide the strongest practical isolation available from Android WebView.
+   558→   558→
+   559→   559→Document limitations honestly.
+   560→   560→
+   561→   561→---
+   562→   562→
+   563→   563→# 21. JavaScript Controls
+   564→   564→
+   565→   565→Each tab should support:
+   566→   566→
+   567→   567→- JavaScript enabled/disabled
+   568→   568→- stored per-tab setting
+   569→   569→- runtime application to WebView
+   570→   570→
+   571→   571→Reload/reconfigure the WebView when necessary after changing the setting.
+   572→   572→
+   573→   573→---
+   574→   574→
+   575→   575→# 22. CSS and User Scripts
+   576→   576→
+   577→   577→Preserve the existing prototype concept of:
+   578→   578→
+   579→   579→- custom CSS
+   580→   580→- custom JavaScript/user scripts
+   581→   581→
+   582→   582→Apply them at an appropriate page lifecycle point.
+   583→   583→
+   584→   584→Keep them isolated to the corresponding tab.
+   585→   585→
+   586→   586→Do not execute arbitrary scripts globally.
+   587→   587→
+   588→   588→Do not unnecessarily expose native Android interfaces to page JavaScript.
+   589→   589→
+   590→   590→---
+   591→   591→
+   592→   592→# 23. Ad and Tracker Blocking
+   593→   593→
+   594→   594→Implement a native host-based blocker.
+   595→   595→
+   596→   596→Use:
+   597→   597→
+   598→   598→`WebViewClient.shouldInterceptRequest()`
+   599→   599→
+   600→   600→Support:
+   601→   601→
+   602→   602→- bundled host blocklist
+   603→   603→- optional periodically updated list
+   604→   604→- custom user domains
+   605→   605→- global enable/disable
+   606→   606→- per-tab enable/disable
+   607→   607→- blocked request count
+   608→   608→
+   609→   609→Start with host-based filtering.
+   610→   610→
+   611→   611→Do not claim full browser-extension-level filtering unless the implementation actually supports it.
+   612→   612→
+   613→   613→---
+   614→   614→
+   615→   615→# 24. HTTPS Security
+   616→   616→
+   617→   617→Default to secure behavior.
+   618→   618→
+   619→   619→For certificate errors:
+   620→   620→
+   621→   621→- reject invalid SSL/certificate situations by default
+   622→   622→- provide clear user feedback
+   623→   623→- allow deliberate site trust only where technically justified
+   624→   624→- store temporary/per-site trust overrides safely
+   625→   625→
+   626→   626→Do not silently bypass SSL errors.
+   627→   627→
+   628→   628→Do not implement generic certificate pinning for arbitrary websites.
+   629→   629→
+   630→   630→---
+   631→   631→
+   632→   632→# 25. Website Integration
+   633→   633→
+   634→   634→When adding a website:
+   635→   635→
+   636→   636→- normalize URL
+   637→   637→- detect title
+   638→   638→- detect favicon
+   639→   639→- optionally inspect manifest
+   640→   640→- identify PWA-related metadata where accessible
+   641→   641→- identify theme color where practical
+   642→   642→- support manual app-like/fullscreen override
+   643→   643→- allow custom name
+   644→   644→- allow custom icon
+   645→   645→
+   646→   646→Do not depend on the browser prototype's favicon service as the production Android mechanism.
+   647→   647→
+   648→   648→---
+   649→   649→
+   650→   650→# 26. PWA Behavior
+   651→   651→
+   652→   652→PWA-capable websites may receive app-like presentation.
+   653→   653→
+   654→   654→Support where technically practical:
+   655→   655→
+   656→   656→- manifest detection
+   657→   657→- theme color
+   658→   658→- display mode
+   659→   659→- splash behavior where appropriate
+   660→   660→- fullscreen/app mode
+   661→   661→
+   662→   662→Do not pretend a website is a full native Android application.
+   663→   663→
+   664→   664→It remains content rendered through WebView.
+   665→   665→
+   666→   666→---
+   667→   667→
+   668→   668→# 27. Workspace-Adaptive Navigation
+   669→   669→
+   670→   670→Use Android adaptive design.
+   671→   671→
+   672→   672→Phone:
+   673→   673→
+   674→   674→- compact navigation
+   675→   675→- bottom sheets where appropriate
+   676→   676→- horizontally scrollable tab strip or Android-appropriate tab UI
+   677→   677→
+   678→   678→Tablet:
+   679→   679→
+   680→   680→- navigation rail
+   681→   681→- side panel
+   682→   682→
+   683→   683→Large/foldable:
+   684→   684→
+   685→   685→- multi-pane layout
+   686→   686→
+   687→   687→A good expanded arrangement is:
+   688→   688→
+   689→   689→**Workspace Rail → Tab Column → WebView Content**
+   690→   690→
+   691→   691→Use WindowSizeClass / adaptive Compose APIs.
+   692→   692→
+   693→   693→---
+   694→   694→
+   695→   695→# 28. Tab Overview
+   696→   696→
+   697→   697→Build a native tab overview.
+   698→   698→
+   699→   699→Each card should show:
+   700→   700→
+   701→   701→- thumbnail
+   702→   702→- favicon
+   703→   703→- tab title
+   704→   704→- workspace
+   705→   705→- private/incognito state
+   706→   706→- hibernated state
+   707→   707→- close action
+   708→   708→
+   709→   709→Support:
+   710→   710→
+   711→   711→- open
+   712→   712→- close
+   713→   713→- reorder
+   714→   714→- move
+   715→   715→- duplicate
+   716→   716→- restore
+   717→   717→- long-press actions
+   718→   718→
+   719→   719→Use Compose lazy layouts.
+   720→   720→
+   721→   721→---
+   722→   722→
+   723→   723→# 29. Workspace Switcher
+   724→   724→
+   725→   725→Phone:
+   726→   726→
+   727→   727→Use a ModalBottomSheet.
+   728→   728→
+   729→   729→Tablet/foldable:
+   730→   730→
+   731→   731→Use a side panel or navigation rail.
+   732→   732→
+   733→   733→Show:
+   734→   734→
+   735→   735→- workspace name
+   736→   736→- tab count
+   737→   737→- selected state
+   738→   738→- create
+   739→   739→- rename
+   740→   740→- delete
+   741→   741→- default workspace
+   742→   742→
+   743→   743→---
+   744→   744→
+   745→   745→# 30. Add Tab Sheet
+   746→   746→
+   747→   747→Native Compose flow:
+   748→   748→
+   749→   749→1. URL input
+   750→   750→2. URL normalization
+   751→   751→3. metadata preview
+   752→   752→4. favicon preview
+   753→   753→5. title preview
+   754→   754→6. custom name
+   755→   755→7. custom icon
+   756→   756→8. workspace selection
+   757→   757→9. incognito selection
+   758→   758→10. create tab
+   759→   759→11. activate tab
+   760→   760→
+   761→   761→The implementation should feel immediate and native.
+   762→   762→
+   763→   763→---
+   764→   764→
+   765→   765→# 31. Bookmarks
+   766→   766→
+   767→   767→Implement Room-backed bookmarks.
+   768→   768→
+   769→   769→Support:
+   770→   770→
+   771→   771→- save current page
+   772→   772→- remove bookmark
+   773→   773→- browse
+   774→   774→- search
+   775→   775→- open in current tab
+   776→   776→- open in new tab
+   777→   777→- favicon/title
+   778→   778→
+   779→   779→---
+   780→   780→
+   781→   781→# 32. Recently Closed Tabs
+   782→   782→
+   783→   783→Store recently closed normal tabs.
+   784→   784→
+   785→   785→Support:
+   786→   786→
+   787→   787→- list
+   788→   788→- reopen
+   789→   789→- delete history
+   790→   790→
+   791→   791→Limit the list, for example to the latest 20 entries.
+   792→   792→
+   793→   793→Do not store incognito tabs in persistent closed-tab history unless there is a deliberate privacy-safe design.
+   794→   794→
+   795→   795→---
+   796→   796→
+   797→   797→# 33. Sessions
+   798→   798→
+   799→   799→Support:
+   800→   800→
+   801→   801→### Automatic session restoration
+   802→   802→
+   803→   803→On normal app relaunch, restore the user's workspace/tab arrangement.
+   804→   804→
+   805→   805→### Named sessions
+   806→   806→
+   807→   807→Allow named snapshots such as:
+   808→   808→
+   809→   809→- Morning Routine
+   810→   810→- Work Setup
+   811→   811→- Research
+   812→   812→- Social
+   813→   813→
+   814→   814→### Restore
+   815→   815→
+   816→   816→Restore saved session structure into Room and the UI.
+   817→   817→
+   818→   818→### Import/export
+   819→   819→
+   820→   820→Support JSON session export/import using Android's Storage Access Framework where practical.
+   821→   821→
+   822→   822→---
+   823→   823→
+   824→   824→# 34. Quick Switcher
+   825→   825→
+   826→   826→The prototype uses Ctrl+K / Cmd+K.
+   827→   827→
+   828→   828→That must not become the primary Android interaction.
+   829→   829→
+   830→   830→Instead use an Android-friendly quick switcher:
+   831→   831→
+   832→   832→- FAB long-press
+   833→   833→- dedicated search action
+   834→   834→- swipe gesture
+   835→   835→- floating search overlay
+   836→   836→
+   837→   837→Search across:
+   838→   838→
+   839→   839→- tab title
+   840→   840→- URL
+   841→   841→- workspace
+   842→   842→
+   843→   843→Physical keyboard support may also be provided when a keyboard is attached.
+   844→   844→
+   845→   845→---
+   846→   846→
+   847→   847→# 35. Search
+   848→   848→
+   849→   849→Provide:
+   850→   850→
+   851→   851→- current-page find
+   852→   852→- tabs/title/URL search
+   853→   853→- web search
+   854→   854→
+   855→   855→Use Android/WebView appropriate mechanisms for page search.
+   856→   856→
+   857→   857→Do not build a desktop-only command palette as the primary navigation model.
+   858→   858→
+   859→   859→---
+   860→   860→
+   861→   861→# 36. Biometric Authentication
+   862→   862→
+   863→   863→Use:
+   864→   864→
+   865→   865→**Android BiometricPrompt**
+   866→   866→
+   867→   867→Support:
+   868→   868→
+   869→   869→- app lock
+   870→   870→- workspace lock
+   871→   871→- tab lock
+   872→   872→
+   873→   873→Do not use the phrase "Face ID".
+   874→   874→
+   875→   875→Use "biometric authentication".
+   876→   876→
+   877→   877→Authentication must actually protect protected screens/content.
+   878→   878→
+   879→   879→---
+   880→   880→
+   881→   881→# 37. Android Share Target
+   882→   882→
+   883→   883→Implement Android share-sheet integration.
+   884→   884→
+   885→   885→The user should be able to:
+   886→   886→
+   887→   887→**Share → WebHub**
+   888→   888→
+   889→   889→for supported URLs/text.
+   890→   890→
+   891→   891→The app should receive the shared data and open the Add Tab flow with the URL prefilled.
+   892→   892→
+   893→   893→---
+   894→   894→
+   895→   895→# 38. Android Home Screen Widgets
+   896→   896→
+   897→   897→Use Jetpack Glance.
+   898→   898→
+   899→   899→Provide useful widget actions such as:
+   900→   900→
+   901→   901→- workspace shortcuts
+   902→   902→- selected tab shortcuts
+   903→   903→- frequently used tabs
+   904→   904→
+   905→   905→Widget taps should open the Android app directly.
+   906→   906→
+   907→   907→---
+   908→   908→
+   909→   909→# 39. Android Shortcuts
+   910→   910→
+   911→   911→Use ShortcutManager/ShortcutManagerCompat.
+   912→   912→
+   913→   913→Support dynamic shortcuts for useful workspaces/tabs.
+   914→   914→
+   915→   915→Examples:
+   916→   916→
+   917→   917→- Work
+   918→   918→- Personal
+   919→   919→- Finance
+   920→   920→- New Tab
+   921→   921→
+   922→   922→Launching a shortcut should open the Android application directly.
+   923→   923→
+   924→   924→---
+   925→   925→
+   926→   926→# 40. Picture-in-Picture
+   927→   927→
+   928→   928→Support PiP where appropriate for video content.
+   929→   929→
+   930→   930→Use Android's PiP APIs together with WebChromeClient fullscreen/custom-view handling.
+   931→   931→
+   932→   932→Do not pretend arbitrary websites will provide identical PiP behavior.
+   933→   933→
+   934→   934→Test with real supported video sites.
+   935→   935→
+   936→   936→---
+   937→   937→
+   938→   938→# 41. Notifications
+   939→   939→
+   940→   940→Do not claim unrestricted web push capability inside Android System WebView.
+   941→   941→
+   942→   942→Implement practical WebHub signals where supported:
+   943→   943→
+   944→   944→- title changes
+   945→   945→- favicon changes
+   946→   946→- badge-like page indicators
+   947→   947→- in-app alert state
+   948→   948→
+   949→   949→Keep the notification center honest about its source.
+   950→   950→
+   951→   951→---
+   952→   952→
+   953→   953→# 42. Offline Behavior
+   954→   954→
+   955→   955→Do not advertise:
+   956→   956→
+   957→   957→"All websites work offline."
+   958→   958→
+   959→   959→That is false.
+   960→   960→
+   961→   961→WebView may provide cached content, but dynamic sites, authenticated APIs, live feeds, and other network-dependent content may still require connectivity.
+   962→   962→
+   963→   963→Document the behavior accurately.
+   964→   964→
+   965→   965→---
+   966→   966→
+   967→   967→# 43. Accessibility
+   968→   968→
+   969→   969→Everything must be accessible.
+   970→   970→
+   971→   971→Implement:
+   972→   972→
+   973→   973→- content descriptions
+   974→   974→- Compose semantics
+   975→   975→- logical traversal order
+   976→   976→- accessible dialogs
+   977→   977→- accessible tab actions
+   978→   978→- accessible workspace switching
+   979→   979→- minimum touch targets
+   980→   980→- TalkBack compatibility
+   981→   981→- scalable text
+   982→   982→- high-contrast-aware behavior where practical
+   983→   983→
+   984→   984→Test with TalkBack.
+   985→   985→
+   986→   986→---
+   987→   987→
+   988→   988→# 44. Android Lifecycle
+   989→   989→
+   990→   990→Handle:
+   991→   991→
+   992→   992→- Activity creation
+   993→   993→- destruction
+   994→   994→- recreation
+   995→   995→- background/foreground
+   996→   996→- configuration changes
+   997→   997→- process death/recreation
+   998→   998→- WebView cleanup
+   999→   999→
+  1000→  1000→Do not allow WebViews to leak Activity references.
+  1001→  1001→
+  1002→  1002→Make WebView ownership explicit.
+  1003→  1003→
+  1004→  1004→---
+  1005→  1005→
+  1006→  1006→# 45. Renderer Failures
+  1007→  1007→
+  1008→  1008→Handle WebView renderer problems.
+  1009→  1009→
+  1010→  1010→Support user recovery such as:
+  1011→  1011→
+  1012→  1012→- reload tab
+  1013→  1013→- recreate WebView
+  1014→  1014→- restore tab state
+  1015→  1015→- show an understandable error
+  1016→  1016→
+  1017→  1017→Do not crash the entire application when one site's renderer becomes unhealthy.
+  1018→  1018→
+  1019→  1019→---
+  1020→  1020→
+  1021→  1021→# 46. Permissions and Web Content
+  1022→  1022→
+  1023→  1023→Handle website requests for:
+  1024→  1024→
+  1025→  1025→- camera
+  1026→  1026→- microphone
+  1027→  1027→- geolocation
+  1028→  1028→- notifications where supported
+  1029→  1029→- downloads
+  1030→  1030→- file selection
+  1031→  1031→
+  1032→  1032→Do not automatically grant dangerous permissions.
+  1033→  1033→
+  1034→  1034→Use Android runtime permission flows.
+  1035→  1035→
+  1036→  1036→Explain why a permission is requested where appropriate.
+  1037→  1037→
+  1038→  1038→---
+  1039→  1039→
+  1040→  1040→# 47. Security Principles
+  1041→  1041→
+  1042→  1042→Never:
+  1043→  1043→
+  1044→  1044→- silently bypass SSL errors
+  1045→  1045→- expose unnecessary native interfaces to JavaScript
+  1046→  1046→- store sensitive credentials insecurely
+  1047→  1047→- claim privacy guarantees the implementation does not provide
+  1048→  1048→- implement per-tab VPN using Android VpnService
+  1049→  1049→- claim full offline support for arbitrary websites
+  1050→  1050→
+  1051→  1051→Always:
+  1052→  1052→
+  1053→  1053→- prefer secure defaults
+  1054→  1054→- validate URLs
+  1055→  1055→- constrain external intents
+  1056→  1056→- protect private settings
+  1057→  1057→- use Keystore-backed secure storage
+  1058→  1058→- minimize persisted sensitive browsing data
+  1059→  1059→
+  1060→  1060→---
+  1061→  1061→
+  1062→  1062→# 48. Code Organization
+  1063→  1063→
+  1064→  1064→Use a clean Android structure conceptually containing:
+  1065→  1065→
+  1066→  1066→- `data`
+  1067→  1067→- `db`
+  1068→  1068→- `datastore`
+  1069→  1069→- `repository`
+  1070→  1070→- `domain`
+  1071→  1071→- `model`
+  1072→  1072→- `usecase`
+  1073→  1073→- `ui`
+  1074→  1074→- `main`
+  1075→  1075→- `overview`
+  1076→  1076→- `workspace`
+  1077→  1077→- `addtab`
+  1078→  1078→- `settings`
+  1079→  1079→- `onboarding`
+  1080→  1080→- `components`
+  1081→  1081→- `webview`
+  1082→  1082→- `security`
+  1083→  1083→- `widget`
+  1084→  1084→- `di`
+  1085→  1085→
+  1086→  1086→Keep browser-engine code separated from UI code.
+  1087→  1087→
+  1088→  1088→---
+  1089→  1089→
+  1090→  1090→# 49. State Management
+  1091→  1091→
+  1092→  1092→Do not port Zustand directly.
+  1093→  1093→
+  1094→  1094→Replace it with:
+  1095→  1095→
+  1096→  1096→- Room Flow
+  1097→  1097→- DataStore Flow
+  1098→  1098→- ViewModel StateFlow
+  1099→  1099→- UI event/state models
+  1100→  1100→- UseCases
+  1101→  1101→
+  1102→  1102→Compose observes ViewModel state.
+  1103→  1103→
+  1104→  1104→The UI sends events.
+  1105→  1105→
+  1106→  1106→The ViewModel invokes UseCases.
+  1107→  1107→
+  1108→  1108→---
+  1109→  1109→
+  1110→  1110→# 50. Existing Web Prototype as Reference
+  1111→  1111→
+  1112→  1112→Use the current web prototype to preserve:
+  1113→  1113→
+  1114→  1114→- terminology
+  1115→  1115→- product concepts
+  1116→  1116→- feature discoverability
+  1117→  1117→- workflow ideas
+  1118→  1118→- visual hierarchy
+  1119→  1119→- onboarding concepts
+  1120→  1120→- workspace concepts
+  1121→  1121→- tab concepts
+  1122→  1122→- settings organization
+  1123→  1123→
+  1124→  1124→But do not simply reproduce:
+  1125→  1125→
+  1126→  1126→- Tailwind structures
+  1127→  1127→- React state
+  1128→  1128→- Next.js routes
+  1129→  1129→- browser keyboard behavior
+  1130→  1130→- iframe browser behavior
+  1131→  1131→
+  1132→  1132→Translate the product experience into native Android patterns.
+  1133→  1133→
+  1134→  1134→---
+  1135→  1135→
+  1136→  1136→# 51. Migration Order
+  1137→  1137→
+  1138→  1138→Work through the project in logical phases.
+  1139→  1139→
+  1140→  1140→## Phase 1 — Repository Audit
+  1141→  1141→
+  1142→  1142→Inspect the full repository and create an internal migration map:
+  1143→  1143→
+  1144→  1144→- current feature
+  1145→  1145→- current implementation
+  1146→  1146→- Android equivalent
+  1147→  1147→- limitations
+  1148→  1148→- dependencies
+  1149→  1149→- migration priority
+  1150→  1150→
+  1151→  1151→Do not start by blindly rewriting files.
+  1152→  1152→
+  1153→  1153→## Phase 2 — Android Foundation
+  1154→  1154→
+  1155→  1155→Create a working Android project.
+  1156→  1156→
+  1157→  1157→Verify:
+  1158→  1158→
+  1159→  1159→- Gradle sync
+  1160→  1160→- Kotlin compilation
+  1161→  1161→- Compose
+  1162→  1162→- Hilt
+  1163→  1163→- Room
+  1164→  1164→- DataStore
+  1165→  1165→- Navigation
+  1166→  1166→
+  1167→  1167→The app must launch on an Android emulator/device.
+  1168→  1168→
+  1169→  1169→## Phase 3 — Browser Engine
+  1170→  1170→
+  1171→  1171→Implement:
+  1172→  1172→
+  1173→  1173→- WebView manager
+  1174→  1174→- WebView client
+  1175→  1175→- Chrome client
+  1176→  1176→- one working tab
+  1177→  1177→- navigation
+  1178→  1178→- omnibox
+  1179→  1179→- loading indicator
+  1180→  1180→
+  1181→  1181→## Phase 4 — Tabs and Workspaces
+  1182→  1182→
+  1183→  1183→Implement:
+  1184→  1184→
+  1185→  1185→- multiple WebViews
+  1186→  1186→- tab switching
+  1187→  1187→- tab persistence
+  1188→  1188→- workspace persistence
+  1189→  1189→- drag/reorder
+  1190→  1190→- move between workspaces
+  1191→  1191→
+  1192→  1192→## Phase 5 — Browser Persistence
+  1193→  1193→
+  1194→  1194→Implement:
+  1195→  1195→
+  1196→  1196→- session restore
+  1197→  1197→- recent tabs
+  1198→  1198→- bookmarks
+  1199→  1199→- named sessions
+  1200→  1200→- state restoration
+  1201→  1201→
+  1202→  1202→## Phase 6 — Privacy
+  1203→  1203→
+  1204→  1204→Implement:
+  1205→  1205→
+  1206→  1206→- incognito
+  1207→  1207→- cookie/storage strategy
+  1208→  1208→- JavaScript toggle
+  1209→  1209→- ad blocking
+  1210→  1210→- HTTPS handling
+  1211→  1211→- privacy settings
+  1212→  1212→
+  1213→  1213→## Phase 7 — UX
+  1214→  1214→
+  1215→  1215→Implement:
+  1216→  1216→
+  1217→  1217→- tab overview
+  1218→  1218→- workspace switcher
+  1219→  1219→- quick switcher
+  1220→  1220→- onboarding
+  1221→  1221→- Material You
+  1222→  1222→- adaptive layouts
+  1223→  1223→
+  1224→  1224→## Phase 8 — Android Integration
+  1225→  1225→
+  1226→  1226→Implement:
+  1227→  1227→
+  1228→  1228→- share target
+  1229→  1229→- home-screen widgets
+  1230→  1230→- dynamic shortcuts
+  1231→  1231→- biometric protection
+  1232→  1232→- PiP
+  1233→  1233→
+  1234→  1234→## Phase 9 — Hardening
+  1235→  1235→
+  1236→  1236→Implement:
+  1237→  1237→
+  1238→  1238→- hibernation
+  1239→  1239→- memory optimization
+  1240→  1240→- renderer failure recovery
+  1241→  1241→- accessibility
+  1242→  1242→- lifecycle handling
+  1243→  1243→- tests
+  1244→  1244→- release build configuration
+  1245→  1245→
+  1246→  1246→---
+  1247→  1247→
+  1248→  1248→# 52. Testing Requirements
+  1249→  1249→
+  1250→  1250→Do not stop when the application compiles.
+  1251→  1251→
+  1252→  1252→Test on Android emulator/device.
+  1253→  1253→
+  1254→  1254→Test:
+  1255→  1255→
+  1256→  1256→## Tabs
+  1257→  1257→
+  1258→  1258→- create
+  1259→  1259→- open
+  1260→  1260→- switch
+  1261→  1261→- close
+  1262→  1262→- duplicate
+  1263→  1263→- reorder
+  1264→  1264→- move
+  1265→  1265→- reopen
+  1266→  1266→
+  1267→  1267→## Workspaces
+  1268→  1268→
+  1269→  1269→- create
+  1270→  1270→- rename
+  1271→  1271→- delete
+  1272→  1272→- switch
+  1273→  1273→- default
+  1274→  1274→- persistence
+  1275→  1275→
+  1276→  1276→## Persistence
+  1277→  1277→
+  1278→  1278→- kill app
+  1279→  1279→- relaunch
+  1280→  1280→- verify data
+  1281→  1281→- rotate device
+  1282→  1282→- background/foreground
+  1283→  1283→- process recreation
+  1284→  1284→
+  1285→  1285→## WebView
+  1286→  1286→
+  1287→  1287→Test:
+  1288→  1288→
+  1289→  1289→- normal websites
+  1290→  1290→- JavaScript-heavy websites
+  1291→  1291→- redirects
+  1292→  1292→- authentication pages
+  1293→  1293→- back/forward
+  1294→  1294→- reload
+  1295→  1295→- fullscreen video
+  1296→  1296→- downloads
+  1297→  1297→- popups
+  1298→  1298→- permissions
+  1299→  1299→- malformed SSL/certificate sites
+  1300→  1300→- renderer failures
+  1301→  1301→
+  1302→  1302→## Incognito
+  1303→  1303→
+  1304→  1304→Verify actual cookie/cache/storage behavior.
+  1305→  1305→
+  1306→  1306→## Hibernation
+  1307→  1307→
+  1308→  1308→Confirm WebView destruction and recreation.
+  1309→  1309→
+  1310→  1310→## Accessibility
+  1311→  1311→
+  1312→  1312→Test TalkBack.
+  1313→  1313→
+  1314→  1314→## Adaptive UI
+  1315→  1315→
+  1316→  1316→Test:
+  1317→  1317→
+  1318→  1318→- phone
+  1319→  1319→- tablet
+  1320→  1320→- landscape
+  1321→  1321→- foldable where possible
+  1322→  1322→- split-screen
+  1323→  1323→
+  1324→  1324→## Release
+  1325→  1325→
+  1326→  1326→Run:
+  1327→  1327→
+  1328→  1328→- unit tests
+  1329→  1329→- instrumentation/UI tests where appropriate
+  1330→  1330→- lint
+  1331→  1331→- release build
+  1332→  1332→- AAB generation
+  1333→  1333→
+  1334→  1334→---
+  1335→  1335→
+  1336→  1336→# 53. Performance
+  1337→  1337→
+  1338→  1338→Use realistic performance targets.
+  1339→  1339→
+  1340→  1340→The application is WebView-heavy, so memory usage will depend strongly on page complexity.
+  1341→  1341→
+  1342→  1342→Do not promise unrealistic numbers.
+  1343→  1343→
+  1344→  1344→Optimize using:
+  1345→  1345→
+  1346→  1346→- lazy WebView creation
+  1347→  1347→- tab hibernation
+  1348→  1348→- LRU policies
+  1349→  1349→- memory trim callbacks
+  1350→  1350→- efficient thumbnails
+  1351→  1351→- limited background work
+  1352→  1352→- IO dispatchers for database/network work
+  1353→  1353→
+  1354→  1354→Measure before declaring performance success.
+  1355→  1355→
+  1356→  1356→---
+  1357→  1357→
+  1358→  1358→# 54. Definition of Done
+  1359→  1359→
+  1360→  1360→Do not declare the project complete merely because:
+  1361→  1361→
+  1362→  1362→- an Android activity exists
+  1363→  1363→- a WebView opens a URL
+  1364→  1364→- tabs can be drawn
+  1365→  1365→- the Android UI resembles the website
+  1366→  1366→- the web app is packaged somehow
+  1367→  1367→
+  1368→  1368→WebHub is complete only when the actual Android implementation provides the core product:
+  1369→  1369→
+  1370→  1370→- native Kotlin application
+  1371→  1371→- Jetpack Compose UI
+  1372→  1372→- real Android WebView browser engine
+  1373→  1373→- multiple persistent tabs
+  1374→  1374→- workspace organization
+  1375→  1375→- Room persistence
+  1376→  1376→- DataStore configuration
+  1377→  1377→- tab lifecycle management
+  1378→  1378→- real hibernation
+  1379→  1379→- incognito behavior
+  1380→  1380→- per-tab controls
+  1381→  1381→- bookmarks
+  1382→  1382→- recently closed tabs
+  1383→  1383→- named sessions
+  1384→  1384→- session restore
+  1385→  1385→- Material You
+  1386→  1386→- adaptive phone/tablet layouts
+  1387→  1387→- biometric protection
+  1388→  1388→- Android share target
+  1389→  1389→- widgets
+  1390→  1390→- shortcuts
+  1391→  1391→- PiP where supported
+  1392→  1392→- predictive back
+  1393→  1393→- accessibility
+  1394→  1394→- security hardening
+  1395→  1395→- release AAB
+  1396→  1396→
+  1397→  1397→---
+  1398→  1398→
+  1399→  1399→# 55. Absolute Rules
+  1400→  1400→
+  1401→  1401→These rules override convenience:
+  1402→  1402→
+  1403→  1403→### DO NOT
+  1404→  1404→
+  1405→  1405→- continue building the product as Next.js
+  1406→  1406→- make the website the Android runtime
+  1407→  1407→- use iframes as the tab browser
+  1408→  1408→- use Capacitor
+  1409→  1409→- use React Native
+  1410→  1410→- use PWA packaging
+  1411→  1411→- use Prisma in the Android app
+  1412→  1412→- use Zustand for Android application state
+  1413→  1413→- use localStorage for Android persistence
+  1414→  1414→- fake hibernation
+  1415→  1415→- fake incognito
+  1416→  1416→- fake cookie isolation
+  1417→  1417→- implement per-tab VPN using VpnService
+  1418→  1418→- use "Face ID"
+  1419→  1419→- claim arbitrary-site offline support
+  1420→  1420→- claim perfect WebView session serialization
+  1421→  1421→
+  1422→  1422→### DO
+  1423→  1423→
+  1424→  1424→- build a real native Android project
+  1425→  1425→- use Kotlin
+  1426→  1426→- use Compose
+  1427→  1427→- use AndroidView + WebView
+  1428→  1428→- use Hilt
+  1429→  1429→- use Room
+  1430→  1430→- use Proto DataStore
+  1431→  1431→- use Coroutines + Flow
+  1432→  1432→- use Android Keystore
+  1433→  1433→- use BiometricPrompt
+  1434→  1434→- use Android widgets
+  1435→  1435→- use Android shortcuts
+  1436→  1436→- use Android share intents
+  1437→  1437→- use PiP APIs where appropriate
+  1438→  1438→- use adaptive Compose layouts
+  1439→  1439→- validate actual Android behavior
+  1440→  1440→- preserve useful product behavior from the current web prototype
+  1441→  1441→
+  1442→  1442→---
+  1443→  1443→
+  1444→  1444→# 56. Final Instruction
+  1445→  1445→
+  1446→  1446→The current GitHub repository is the **starting product reference**, not the final runtime architecture.
+  1447→  1447→
+  1448→  1448→Your job is to transform WebHub into a genuine Android application.
+  1449→  1449→
+  1450→  1450→Always prioritize:
+  1451→  1451→
+  1452→  1452→**real Android functionality over superficial similarity to the web prototype.**
+  1453→  1453→
+  1454→  1454→When the choice is:
+  1455→  1455→
+  1456→  1456→**"make the existing web app more complete"**
+  1457→  1457→
+  1458→  1458→versus
+  1459→  1459→
+  1460→  1460→**"implement the equivalent capability natively on Android"**
+  1461→  1461→
+  1462→  1462→choose the native Android implementation.
+  1463→  1463→
+  1464→  1464→Do not stop at a prototype shell.
+  1465→  1465→
+  1466→  1466→The end result must be a real Android app that can be installed, launched independently, browse actual websites inside Android WebViews, persist workspaces/tabs, manage privacy and lifecycle, and be prepared for production distribution through the Play Store.
+  1467→  1467→
+  1468→  1468→Begin by auditing the repository, determining exactly what the current prototype already provides, mapping those capabilities to Android equivalents, and then implementing the native Android application in logical phases.
+  1469→  1469→
