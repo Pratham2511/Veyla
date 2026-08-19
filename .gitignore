@@ -1,0 +1,60 @@
+# Dependencies
+node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug / logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# Environment
+.env*
+
+# Vercel
+.vercel
+
+# Database files
+db/*.db
+db/*.db-journal
+
+# Internal tooling (not part of the project)
+.zscripts/
+.z-ai-config
+.claude
+Caddyfile
+worklog.md
+upload/
+download/
+examples/
+mini-services/
+tests/
+skills/
+test
+prompt
+
+# CLAUDE.md at root
+/CLAUDE.md

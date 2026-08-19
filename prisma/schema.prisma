@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  themeMode String   @default("system")
+  accentColor String?
+  position  Int      @default(0)
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tabs      Tab[]
+}
+
+model Tab {
+  id              String   @id @default(cuid())
+  workspaceId     String
+  url             String
+  title           String   @default("")
+  faviconUrl      String?
+  customName      String?
+  customIconUri   String?
+  isIncognito     Boolean  @default(false)
+  isJsEnabled     Boolean  @default(true)
+  isAdBlockEnabled Boolean @default(true)
+  cssOverride     String?
+  userScript      String?
+  position        Int      @default(0)
+  isHibernated    Boolean  @default(false)
+  savedScrollY    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  url       String
+  title     String
+  faviconUrl String?
+  createdAt DateTime @default(now())
+}
+
+model ClosedTabHistory {
+  id        String   @id @default(cuid())
+  tabId     String
+  url       String
+  title     String
+  faviconUrl String?
+  closedAt  DateTime @default(now())
+}
+
+model SessionSnapshot {
+  id        String   @id @default(cuid())
+  name      String
+  data      String   // JSON serialized tab/workspace state
+  createdAt DateTime @default(now())
+}
+
+model AppSettings {
+  id                String   @id @default("singleton")
+  activeWorkspaceId String?
+  themeMode         String   @default("system")
+  isBiometricEnabled Boolean @default(false)
+  adBlockEnabled    Boolean  @default(true)
+  searchEngineUrl   String   @default("https://www.google.com/search?q=")
+  onboardingDone    Boolean  @default(false)
+  updatedAt         DateTime @updatedAt
+}
