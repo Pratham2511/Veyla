@@ -86,7 +86,7 @@ private enum class ThemeOption(val value: String, val label: String, val icon: I
 // ── Main composable ───────────────────────────────────────────────────────────
 
 /**
- * Full-screen settings for WebHub.
+ * Full-screen settings for Veyla.
  *
  * @param onBack Called when the user presses the back button.
  */
@@ -285,7 +285,7 @@ fun SettingsScreen(
                     headlineContent = { Text("Biometric lock") },
                     supportingContent = {
                         if (state.biometricAvailable) {
-                            Text("Require fingerprint to open WebHub")
+                            Text("Require fingerprint to open Veyla")
                         } else {
                             Text("No biometric hardware available")
                         }
@@ -308,7 +308,7 @@ fun SettingsScreen(
                     headlineContent = { Text("HTTPS security") },
                     supportingContent = {
                         Text(
-                            "WebHub enforces HTTPS connections where possible. " +
+                            "Veyla enforces HTTPS connections where possible. " +
                                     "Sites with invalid certificates are flagged with a warning."
                         )
                     },
@@ -345,7 +345,7 @@ fun SettingsScreen(
                 // Auto-restore toggle (informational for now)
                 ListItem(
                     headlineContent = { Text("Auto-restore last session") },
-                    supportingContent = { Text("Automatically restore tabs when WebHub opens") },
+                    supportingContent = { Text("Automatically restore tabs when Veyla opens") },
                     leadingContent = {
                         Icon(Icons.Default.Restore, contentDescription = null)
                     },
@@ -424,7 +424,7 @@ fun SettingsScreen(
                     headlineContent = { Text("GitHub") },
                     supportingContent = {
                         Text(
-                            "github.com/pratham/webhub",
+                            "github.com/Pratham2511/Veyla",
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -442,7 +442,7 @@ fun SettingsScreen(
                     modifier = Modifier.clickable {
                         val intent = android.content.Intent(
                             android.content.Intent.ACTION_VIEW,
-                            Uri.parse("https://github.com/pratham/webhub")
+                            Uri.parse("https://github.com/Pratham2511/Veyla")
                         )
                         context.startActivity(intent)
                     }

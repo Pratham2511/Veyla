@@ -54,7 +54,7 @@ class WebHubWidget : GlanceAppWidget() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "WebHub",
+                        text = "Veyla",
                         style = TextStyle(
                             color = ColorProvider(day = Color(0xFF6366F1), night = Color(0xFFB4B6FC)),
                             fontSize = 20.sp,

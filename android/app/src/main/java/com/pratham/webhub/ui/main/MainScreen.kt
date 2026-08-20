@@ -557,7 +557,7 @@ private fun WorkspaceDrawerContent(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Text(
-                text = "WebHub",
+                text = "Veyla",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -754,7 +754,7 @@ private fun HomePlaceholder(
             .padding(32.dp)
     ) {
         Text(
-            text = "WebHub",
+            text = "Veyla",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary

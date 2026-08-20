@@ -19,7 +19,7 @@
         android:name=".WebHubApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="WebHub"
+        android:label="Veyla"
         android:supportsRtl="true"
         android:theme="@style/Theme.WebHub"
         android:usesCleartextTraffic="false"
