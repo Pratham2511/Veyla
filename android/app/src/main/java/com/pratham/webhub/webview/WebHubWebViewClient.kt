@@ -65,13 +65,6 @@ class WebHubWebViewClient(
         extractFavicon(view)
     }
 
-    override fun onReceivedTitle(view: WebView, title: String?) {
-        super.onReceivedTitle(view, title)
-        if (!title.isNullOrEmpty()) {
-            onTitleChanged(tabId, title)
-        }
-    }
-
     override fun onReceivedError(view: WebView, request: WebResourceRequest, error: android.webkit.WebResourceError) {
         super.onReceivedError(view, request, error)
         if (request.isForMainFrame) {

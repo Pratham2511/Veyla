@@ -1,0 +1,1183 @@
+     1→     1→package com.pratham.webhub.ui.main
+     2→     2→
+     3→     3→import android.annotation.SuppressLint
+     4→     4→import android.view.ViewGroup
+     5→     5→import android.webkit.WebView
+     6→     6→import android.widget.FrameLayout
+     7→     7→import androidx.activity.compose.BackHandler
+     8→     8→import androidx.compose.foundation.ExperimentalFoundationApi
+     9→     9→import androidx.compose.foundation.background
+    10→    10→import androidx.compose.foundation.clickable
+    11→    11→import androidx.compose.foundation.combinedClickable
+    12→    12→import androidx.compose.foundation.layout.Arrangement
+    13→    13→import androidx.compose.foundation.layout.Box
+    14→    14→import androidx.compose.foundation.layout.Column
+    15→    15→import androidx.compose.foundation.layout.PaddingValues
+    16→    16→import androidx.compose.foundation.layout.Row
+    17→    17→import androidx.compose.foundation.layout.Spacer
+    18→    18→import androidx.compose.foundation.layout.fillMaxHeight
+    19→    19→import androidx.compose.foundation.layout.fillMaxSize
+    20→    20→import androidx.compose.foundation.layout.fillMaxWidth
+    21→    21→import androidx.compose.foundation.layout.height
+    22→    22→import androidx.compose.foundation.layout.navigationBarsPadding
+    23→    23→import androidx.compose.foundation.layout.padding
+    24→    24→import androidx.compose.foundation.layout.size
+    25→    25→import androidx.compose.foundation.layout.statusBarsPadding
+    26→    26→import androidx.compose.foundation.layout.width
+    27→    27→import androidx.compose.foundation.lazy.LazyColumn
+    28→    28→import androidx.compose.foundation.lazy.items
+    29→    29→import androidx.compose.foundation.shape.CircleShape
+    30→    30→import androidx.compose.foundation.shape.RoundedCornerShape
+    31→    31→import androidx.compose.foundation.text.BasicTextField
+    32→    32→import androidx.compose.foundation.text.KeyboardActions
+    33→    33→import androidx.compose.foundation.text.KeyboardOptions
+    34→    34→import androidx.compose.material.icons.Icons
+    35→    35→import androidx.compose.material.icons.filled.Add
+    36→    36→import androidx.compose.material.icons.filled.CheckCircle
+    37→    37→import androidx.compose.material.icons.filled.Edit
+    38→    38→import androidx.compose.material.icons.filled.Folder
+    39→    39→import androidx.compose.material.icons.filled.History
+    40→    40→import androidx.compose.material.icons.filled.Tab
+    41→    41→import androidx.compose.material.icons.filled.ViewAgenda
+    42→    42→import androidx.compose.material3.DrawerValue
+    43→    43→import androidx.compose.material3.ExperimentalMaterial3Api
+    44→    44→import androidx.compose.material3.FloatingActionButton
+    45→    45→import androidx.compose.material3.FloatingActionButtonDefaults
+    46→    46→import androidx.compose.material3.HorizontalDivider
+    47→    47→import androidx.compose.material3.Icon
+    48→    48→import androidx.compose.material3.IconButton
+    49→    49→import androidx.compose.material3.MaterialTheme
+    50→    50→import androidx.compose.material3.ModalDrawerSheet
+    51→    51→import androidx.compose.material3.ModalNavigationDrawer
+    52→    52→import androidx.compose.material3.NavigationDrawerItem
+    53→    53→import androidx.compose.material3.NavigationDrawerItemDefaults
+    54→    54→import androidx.compose.material3.Scaffold
+    55→    55→import androidx.compose.material3.ScaffoldDefaults
+    56→    56→import androidx.compose.material3.SnackbarHost
+    57→    57→import androidx.compose.material3.SnackbarHostState
+    58→    58→import androidx.compose.material3.Surface
+    59→    59→import androidx.compose.material3.Text
+    60→    60→import androidx.compose.material3.TextButton
+    61→    61→import androidx.compose.material3.TopAppBar
+    62→    62→import androidx.compose.material3.TopAppBarDefaults
+    63→    63→import androidx.compose.material3.TopAppBarScrollBehavior
+    64→    64→import androidx.compose.material3.rememberDrawerState
+    65→    65→import androidx.compose.material3.rememberTopAppBarState
+    66→    66→import androidx.compose.runtime.Composable
+    67→    67→import androidx.compose.runtime.LaunchedEffect
+    68→    68→import androidx.compose.runtime.collectAsStateWithLifecycle
+    69→    69→import androidx.compose.runtime.getValue
+    70→    70→import androidx.compose.runtime.mutableStateOf
+    71→    71→import androidx.compose.runtime.remember
+    72→    72→import androidx.compose.runtime.rememberCoroutineScope
+    73→    73→import androidx.compose.runtime.setValue
+    74→    74→import androidx.compose.ui.Alignment
+    75→    75→import androidx.compose.ui.Modifier
+    76→    76→import androidx.compose.ui.draw.alpha
+    77→    77→import androidx.compose.ui.graphics.Color
+    78→    78→import androidx.compose.ui.graphics.vector.ImageVector
+    79→    79→import androidx.compose.ui.input.nestedscroll.nestedScroll
+    80→    80→import androidx.compose.ui.text.font.FontWeight
+    81→    81→import androidx.compose.ui.text.input.ImeAction
+    82→    82→import androidx.compose.ui.text.style.TextOverflow
+    83→    83→import androidx.compose.ui.unit.dp
+    84→    84→import androidx.compose.ui.unit.sp
+    85→    85→import androidx.compose.ui.viewinterop.AndroidView
+    86→    86→import androidx.compose.ui.window.Dialog
+    87→    87→import androidx.compose.ui.window.DialogProperties
+    88→    88→import androidx.hilt.navigation.compose.hiltViewModel
+    89→    89→import com.pratham.webhub.domain.model.Tab
+    90→    90→import com.pratham.webhub.domain.model.Workspace
+    91→    91→import com.pratham.webhub.ui.addtab.AddTabViewModel
+    92→    92→import com.pratham.webhub.ui.browser.BrowserUiState
+    93→    93→import com.pratham.webhub.ui.browser.BrowserViewModel
+    94→    94→import com.pratham.webhub.ui.components.Omnibox
+    95→    95→import com.pratham.webhub.ui.components.TabStrip
+    96→    96→import com.pratham.webhub.ui.workspace.WorkspaceViewModel
+    97→    97→import com.pratham.webhub.util.UrlNormalizer
+    98→    98→import kotlinx.coroutines.launch
+    99→    99→
+   100→   100→// ─────────────────────────────────────────────────────────────────────────────
+   101→   101→// MainScreen – the primary browser screen that orchestrates the entire app.
+   102→   102→// ─────────────────────────────────────────────────────────────────────────────
+   103→   103→
+   104→   104→/**
+   105→   105→ * The top-level browser screen that hosts the [Omnibox], WebView content,
+   106→   106→ * [TabStrip], and all overlay bottom-sheets / dialogs.
+   107→   107→ *
+   108→   108→ * This composable is the primary entry point after onboarding and is
+   109→   109→ * responsible for orchestrating the [MainViewModel] (tab & workspace
+   110→   110→ * management) with the [BrowserViewModel] (WebView rendering).
+   111→   111→ *
+   112→   112→ * @param initialUrl          An optional URL from a share-intent or deep link.
+   113→   113→ * @param onNavigateToBookmarks Callback to navigate to the bookmarks screen.
+   114→   114→ * @param onNavigateToSettings  Callback to navigate to the settings screen.
+   115→   115→ */
+   116→   116→@OptIn(ExperimentalMaterial3Api::class)
+   117→   117→@SuppressLint("SetJavaScriptEnabled")
+   118→   118→@Composable
+   119→   119→fun MainScreen(
+   120→   120→    initialUrl: String? = null,
+   121→   121→    onNavigateToBookmarks: () -> Unit = {},
+   122→   122→    onNavigateToSettings: () -> Unit = {},
+   123→   123→    mainViewModel: MainViewModel = hiltViewModel(),
+   124→   124→    browserViewModel: BrowserViewModel = hiltViewModel(),
+   125→   125→) {
+   126→   126→    val uiState by mainViewModel.state.collectAsStateWithLifecycle()
+   127→   127→    val browserState by browserViewModel.state.collectAsStateWithLifecycle()
+   128→   128→    val webView by browserViewModel.webView.collectAsStateWithLifecycle()
+   129→   129→    val customView by browserViewModel.customView.collectAsStateWithLifecycle()
+   130→   130→
+   131→   131→    val coroutineScope = rememberCoroutineScope()
+   132→   132→    val snackbarHostState = remember { SnackbarHostState() }
+   133→   133→
+   134→   134→    // ── Handle initial URL from share intent / deep link ────────────
+   135→   135→    val initialUrlHandled = remember { mutableStateOf(false) }
+   136→   136→    LaunchedEffect(initialUrl) {
+   137→   137→        if (!initialUrlHandled.value && !initialUrl.isNullOrBlank()) {
+   138→   138→            mainViewModel.onEvent(MainEvent.AddTab(initialUrl, null))
+   139→   139→            initialUrlHandled.value = true
+   140→   140→        }
+   141→   141→    }
+   142→   142→
+   143→   143→    // ── Track active tab changes and attach to browser ──────────────
+   144→   144→    val activeTab = uiState.activeTab
+   145→   145→    LaunchedEffect(activeTab?.id) {
+   146→   146→        if (activeTab != null && !activeTab.isHibernated) {
+   147→   147→            browserViewModel.attachTab(activeTab.id, activeTab)
+   148→   148→        }
+   149→   149→    }
+   150→   150→
+   151→   151→    // Refresh bookmark status when the active tab URL changes
+   152→   152→    LaunchedEffect(activeTab?.url) {
+   153→   153→        activeTab?.let { mainViewModel.refreshBookmarkStatus(it.url) }
+   154→   154→    }
+   155→   155→
+   156→   156→    // ── Scroll behaviour for TopAppBar ──────────────────────────────
+   157→   157→    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+   158→   158→
+   159→   159→    // ── Drawer state for workspace rail (wide screens / all screens) ─
+   160→   160→    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+   161→   161→
+   162→   162→    // ── Menu expansion state ────────────────────────────────────────
+   163→   163→    var showOverflowMenu by remember { mutableStateOf(false) }
+   164→   164→
+   165→   165→    // ═══════════════════════════════════════════════════════════════════
+   166→   166→    // Back-press handling: sheets > WebView.goBack > close tab
+   167→   167→    // ═══════════════════════════════════════════════════════════════════
+   168→   168→    BackHandler(enabled = true) {
+   169→   169→        when {
+   170→   170→            uiState.showQuickSwitcher ||
+   171→   171→            uiState.showWorkspaceSwitcher ||
+   172→   172→            uiState.showAddTabSheet ||
+   173→   173→            uiState.showRecentlyClosed -> {
+   174→   174→                mainViewModel.onEvent(MainEvent.DismissAll)
+   175→   175→            }
+   176→   176→            uiState.showTabOverview -> {
+   177→   177→                mainViewModel.onEvent(MainEvent.DismissAll)
+   178→   178→            }
+   179→   179→            showOverflowMenu -> {
+   180→   180→                showOverflowMenu = false
+   181→   181→            }
+   182→   182→            browserState.canGoBack -> {
+   183→   183→                browserViewModel.goBack()
+   184→   184→            }
+   185→   185→            activeTab != null -> {
+   186→   186→                mainViewModel.onEvent(MainEvent.CloseTab(activeTab.id))
+   187→   187→            }
+   188→   188→        }
+   189→   189→    }
+   190→   190→
+   191→   191→    // ═══════════════════════════════════════════════════════════════════
+   192→   192→    // Fullscreen video overlay
+   193→   193→    // ═══════════════════════════════════════════════════════════════════
+   194→   194→    if (customView != null) {
+   195→   195→        FullscreenVideoOverlay(
+   196→   196→            customView = customView,
+   197→   197→            onExitFullscreen = { browserViewModel.exitFullscreen() }
+   198→   198→        )
+   199→   199→        // Don't render the rest of the UI while in fullscreen
+   200→   200→        return
+   201→   201→    }
+   202→   202→
+   203→   203→    // ═══════════════════════════════════════════════════════════════════
+   204→   204→    // Quick Switcher overlay
+   205→   205→    // ═══════════════════════════════════════════════════════════════════
+   206→   206→    if (uiState.showQuickSwitcher) {
+   207→   207→        QuickSwitcherOverlay(
+   208→   208→            query = uiState.quickSwitcherQuery,
+   209→   209→            tabs = uiState.filteredTabs,
+   210→   210→            activeTabId = uiState.activeTabId,
+   211→   211→            onQueryChanged = { mainViewModel.onEvent(MainEvent.UpdateQuickSwitcherQuery(it)) },
+   212→   212→            onTabSelected = {
+   213→   213→                mainViewModel.onEvent(MainEvent.SelectTab(it))
+   214→   214→                mainViewModel.onEvent(MainEvent.DismissAll)
+   215→   215→            },
+   216→   216→            onDismiss = { mainViewModel.onEvent(MainEvent.DismissAll) }
+   217→   217→        )
+   218→   218→        return
+   219→   219→    }
+   220→   220→
+   221→   221→    // ═══════════════════════════════════════════════════════════════════
+   222→   222→    // Tab Overview (fullscreen grid)
+   223→   223→    // ═══════════════════════════════════════════════════════════════════
+   224→   224→    if (uiState.showTabOverview) {
+   225→   225→        TabOverviewScreen(
+   226→   226→            onTabSelected = {
+   227→   227→                mainViewModel.onEvent(MainEvent.SelectTab(it))
+   228→   228→                mainViewModel.onEvent(MainEvent.DismissAll)
+   229→   229→            },
+   230→   230→            onDismiss = { mainViewModel.onEvent(MainEvent.DismissAll) },
+   231→   231→            onAddTab = { mainViewModel.onEvent(MainEvent.ShowAddTab) }
+   232→   232→        )
+   233→   233→        return
+   234→   234→    }
+   235→   235→
+   236→   236→    // ═══════════════════════════════════════════════════════════════════
+   237→   237→    // Main browser layout
+   238→   238→    // ═══════════════════════════════════════════════════════════════════
+   239→   239→    ModalNavigationDrawer(
+   240→   240→        drawerState = drawerState,
+   241→   241→        drawerContent = {
+   242→   242→            WorkspaceDrawerContent(
+   243→   243→                workspaces = uiState.workspaces,
+   244→   244→                activeWorkspaceId = uiState.activeWorkspaceId,
+   245→   245→                onWorkspaceSelected = { wsId ->
+   246→   246→                    mainViewModel.onEvent(MainEvent.SwitchWorkspace(wsId))
+   247→   247→                    coroutineScope.launch { drawerState.close() }
+   248→   248→                },
+   249→   249→                onNavigateToBookmarks = {
+   250→   250→                    coroutineScope.launch { drawerState.close() }
+   251→   251→                    onNavigateToBookmarks()
+   252→   252→                },
+   253→   253→                onNavigateToSettings = {
+   254→   254→                    coroutineScope.launch { drawerState.close() }
+   255→   255→                    onNavigateToSettings()
+   256→   256→                },
+   257→   257→                onNavigateToHistory = {
+   258→   258→                    mainViewModel.onEvent(MainEvent.ShowRecentlyClosed)
+   259→   259→                    coroutineScope.launch { drawerState.close() }
+   260→   260→                }
+   261→   261→            )
+   262→   262→        }
+   263→   263→    ) {
+   264→   264→        Box(
+   265→   265→            modifier = Modifier
+   266→   266→                .fillMaxSize()
+   267→   267→        ) {
+   268→   268→            Scaffold(
+   269→   269→                modifier = Modifier
+   270→   270→                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+   271→   271→                    .navigationBarsPadding(),
+   272→   272→                topBar = {
+   273→   273→                    MainTopBar(
+   274→   274→                        uiState = uiState,
+   275→   275→                        browserState = browserState,
+   276→   276→                        scrollBehavior = scrollBehavior,
+   277→   277→                        onUrlSubmit = { input ->
+   278→   278→                            val result = UrlNormalizer.normalize(
+   279→   279→                                input,
+   280→   280→                                uiState.settings.searchEngineUrl
+   281→   281→                            )
+   282→   282→                            browserViewModel.loadUrl(result.url)
+   283→   283→                        },
+   284→   284→                        onBack = { browserViewModel.goBack() },
+   285→   285→                        onForward = { browserViewModel.goForward() },
+   286→   286→                        onRefresh = {
+   287→   287→                            if (browserState.isLoading) browserViewModel.stopLoading()
+   288→   288→                            else browserViewModel.reload()
+   289→   289→                        },
+   290→   290→                        onBookmarkToggle = {
+   291→   291→                            val tab = activeTab ?: return@MainTopBar
+   292→   292→                            mainViewModel.onEvent(
+   293→   293→                                MainEvent.ToggleBookmark(
+   294→   294→                                    url = tab.url,
+   295→   295→                                    title = tab.title,
+   296→   296→                                    faviconUrl = tab.faviconUrl
+   297→   297→                                )
+   298→   298→                            )
+   299→   299→                        },
+   300→   300→                        onMenuClick = { showOverflowMenu = true },
+   301→   301→                        onDrawerClick = {
+   302→   302→                            coroutineScope.launch { drawerState.open() }
+   303→   303→                        }
+   304→   304→                    )
+   305→   305→                },
+   306→   306→                bottomBar = {
+   307→   307→                    if (uiState.tabs.isNotEmpty()) {
+   308→   308→                        TabStrip(
+   309→   309→                            tabs = uiState.tabs,
+   310→   310→                            activeTabId = uiState.activeTabId,
+   311→   311→                            onTabSelected = { mainViewModel.onEvent(MainEvent.SelectTab(it)) },
+   312→   312→                            onTabClosed = { mainViewModel.onEvent(MainEvent.CloseTab(it)) },
+   313→   313→                            onTabLongClick = {
+   314→   314→                                mainViewModel.onEvent(MainEvent.ShowTabOverview)
+   315→   315→                            },
+   316→   316→                            onAddTab = { mainViewModel.onEvent(MainEvent.ShowAddTab) }
+   317→   317→                        )
+   318→   318→                    }
+   319→   319→                },
+   320→   320→                floatingActionButton = {
+   321→   321→                    ExtendedNewTabFab(
+   322→   322→                        onClick = { mainViewModel.onEvent(MainEvent.ShowAddTab) },
+   323→   323→                        onLongClick = { mainViewModel.onEvent(MainEvent.ShowQuickSwitcher) }
+   324→   324→                    )
+   325→   325→                },
+   326→   326→                snackbarHost = { SnackbarHost(snackbarHostState) },
+   327→   327→                contentWindowInsets = ScaffoldDefaults.contentWindowInsets
+   328→   328→            ) { paddingValues ->
+   329→   329→
+   330→   330→                // ── WebView content area ────────────────────────────
+   331→   331→                Box(
+   332→   332→                    modifier = Modifier
+   333→   333→                        .fillMaxSize()
+   334→   334→                        .padding(paddingValues)
+   335→   335→                ) {
+   336→   336→                    val currentWebView = webView
+   337→   337→                    if (currentWebView != null && activeTab != null && !activeTab.isHibernated) {
+   338→   338→                        AndroidView(
+   339→   339→                            factory = { currentWebView },
+   340→   340→                            modifier = Modifier.fillMaxSize()
+   341→   341→                        )
+   342→   342→                    } else if (activeTab?.isHibernated == true) {
+   343→   343→                        HibernatedTabPlaceholder(
+   344→   344→                            tab = activeTab,
+   345→   345→                            onWake = {
+   346→   346→                                mainViewModel.onEvent(MainEvent.SelectTab(activeTab.id))
+   347→   347→                            }
+   348→   348→                        )
+   349→   349→                    } else {
+   350→   350→                        HomePlaceholder(
+   351→   351→                            onSearch = { query ->
+   352→   352→                                val result = UrlNormalizer.normalize(
+   353→   353→                                    query,
+   354→   354→                                    uiState.settings.searchEngineUrl
+   355→   355→                                )
+   356→   356→                                if (activeTab != null) {
+   357→   357→                                    browserViewModel.loadUrl(result.url)
+   358→   358→                                } else {
+   359→   359→                                    mainViewModel.onEvent(MainEvent.AddTab(result.url, null))
+   360→   360→                                }
+   361→   361→                            },
+   362→   362→                            onNavigateToBookmarks = onNavigateToBookmarks
+   363→   363→                        )
+   364→   364→                    }
+   365→   365→
+   366→   366→                }
+   367→   367→            }
+   368→   368→        }
+   369→   369→    }
+   370→   370→
+   371→   371→    // ═══════════════════════════════════════════════════════════════════
+   372→   372→    // Overflow dropdown menu
+   373→   373→    // ═══════════════════════════════════════════════════════════════════
+   374→   374→    if (showOverflowMenu) {
+   375→   375→        OverflowMenuDialog(
+   376→   376→            onDismiss = { showOverflowMenu = false },
+   377→   377→            onTabOverview = {
+   378→   378→                showOverflowMenu = false
+   379→   379→                mainViewModel.onEvent(MainEvent.ShowTabOverview)
+   380→   380→            },
+   381→   381→            onNewTab = {
+   382→   382→                showOverflowMenu = false
+   383→   383→                mainViewModel.onEvent(MainEvent.ShowAddTab)
+   384→   384→            },
+   385→   385→            onBookmarks = {
+   386→   386→                showOverflowMenu = false
+   387→   387→                onNavigateToBookmarks()
+   388→   388→            },
+   389→   389→            onHistory = {
+   390→   390→                showOverflowMenu = false
+   391→   391→                mainViewModel.onEvent(MainEvent.ShowRecentlyClosed)
+   392→   392→            },
+   393→   393→            onSettings = {
+   394→   394→                showOverflowMenu = false
+   395→   395→                onNavigateToSettings()
+   396→   396→            }
+   397→   397→        )
+   398→   398→    }
+   399→   399→
+   400→   400→    // ═══════════════════════════════════════════════════════════════════
+   401→   401→    // Bottom sheets
+   402→   402→    // ═══════════════════════════════════════════════════════════════════
+   403→   403→    if (uiState.showWorkspaceSwitcher) {
+   404→   404→        WorkspaceSwitcherSheet(
+   405→   405→            viewModel = hiltViewModel(),
+   406→   406→            onDismiss = { mainViewModel.onEvent(MainEvent.DismissAll) }
+   407→   407→        )
+   408→   408→    }
+   409→   409→
+   410→   410→    if (uiState.showAddTabSheet) {
+   411→   411→        AddTabSheet(
+   412→   412→            viewModel = hiltViewModel(),
+   413→   413→            onTabCreated = { url, name ->
+   414→   414→                mainViewModel.onEvent(MainEvent.AddTab(url, name))
+   415→   415→                mainViewModel.onEvent(MainEvent.DismissAll)
+   416→   416→            },
+   417→   417→            onDismiss = { mainViewModel.onEvent(MainEvent.DismissAll) }
+   418→   418→        )
+   419→   419→    }
+   420→   420→
+   421→   421→    if (uiState.showRecentlyClosed) {
+   422→   422→        RecentlyClosedSheet(
+   423→   423→            onRestore = { mainViewModel.onEvent(MainEvent.RestoreTab(it)) },
+   424→   424→            onDismiss = { mainViewModel.onEvent(MainEvent.DismissAll) }
+   425→   425→        )
+   426→   426→    }
+   427→   427→}
+   428→   428→
+   429→   429→// ─────────────────────────────────────────────────────────────────────────────
+   430→   430→// TopAppBar with Omnibox
+   431→   431→// ─────────────────────────────────────────────────────────────────────────────
+   432→   432→
+   433→   433→@OptIn(ExperimentalMaterial3Api::class)
+   434→   434→@Composable
+   435→   435→private fun MainTopBar(
+   436→   436→    uiState: MainUiState,
+   437→   437→    browserState: BrowserUiState,
+   438→   438→    scrollBehavior: TopAppBarScrollBehavior,
+   439→   439→    onUrlSubmit: (String) -> Unit,
+   440→   440→    onBack: () -> Unit,
+   441→   441→    onForward: () -> Unit,
+   442→   442→    onRefresh: () -> Unit,
+   443→   443→    onBookmarkToggle: () -> Unit,
+   444→   444→    onMenuClick: () -> Unit,
+   445→   445→    onDrawerClick: () -> Unit,
+   446→   446→) {
+   447→   447→    Column {
+   448→   448→        TopAppBar(
+   449→   449→            title = {},
+   450→   450→            navigationIcon = {
+   451→   451→                IconButton(onClick = onDrawerClick) {
+   452→   452→                    Icon(
+   453→   453→                        imageVector = Icons.Default.Folder,
+   454→   454→                        contentDescription = "Workspaces",
+   455→   455→                        tint = MaterialTheme.colorScheme.onSurface
+   456→   456→                    )
+   457→   457→                }
+   458→   458→            },
+   459→   459→            actions = {
+   460→   460→                val tabCount = uiState.tabs.size
+   461→   461→                Surface(
+   462→   462→                    shape = RoundedCornerShape(12.dp),
+   463→   463→                    color = MaterialTheme.colorScheme.surfaceVariant,
+   464→   464→                    modifier = Modifier
+   465→   465→                        .padding(end = 4.dp)
+   466→   466→                        .clickable { /* Tab count chip – no action here */ }
+   467→   467→                ) {
+   468→   468→                    Row(
+   469→   469→                        verticalAlignment = Alignment.CenterVertically,
+   470→   470→                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+   471→   471→                    ) {
+   472→   472→                        Icon(
+   473→   473→                            imageVector = Icons.Default.Tab,
+   474→   474→                            contentDescription = "Tabs",
+   475→   475→                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+   476→   476→                            modifier = Modifier.size(16.dp)
+   477→   477→                        )
+   478→   478→                        Spacer(Modifier.width(4.dp))
+   479→   479→                        Text(
+   480→   480→                            text = "$tabCount",
+   481→   481→                            style = MaterialTheme.typography.labelSmall,
+   482→   482→                            color = MaterialTheme.colorScheme.onSurfaceVariant
+   483→   483→                        )
+   484→   484→                    }
+   485→   485→                }
+   486→   486→            },
+   487→   487→            colors = TopAppBarDefaults.topAppBarColors(
+   488→   488→                containerColor = Color.Transparent
+   489→   489→            ),
+   490→   490→            scrollBehavior = scrollBehavior,
+   491→   491→            modifier = Modifier.statusBarsPadding()
+   492→   492→        )
+   493→   493→
+   494→   494→        // Omnibox below the TopAppBar
+   495→   495→        Omnibox(
+   496→   496→            url = browserState.currentUrl,
+   497→   497→            title = browserState.currentTitle,
+   498→   498→            isLoading = browserState.isLoading,
+   499→   499→            progress = browserState.loadingProgress,
+   500→   500→            sslState = browserState.sslState,
+   501→   501→            canGoBack = browserState.canGoBack,
+   502→   502→            canGoForward = browserState.canGoForward,
+   503→   503→            onUrlSubmit = onUrlSubmit,
+   504→   504→            onBack = onBack,
+   505→   505→            onForward = onForward,
+   506→   506→            onRefresh = onRefresh,
+   507→   507→            onBookmarkToggle = onBookmarkToggle,
+   508→   508→            isBookmarked = uiState.isBookmarked,
+   509→   509→            onMenuClick = onMenuClick,
+   510→   510→            modifier = Modifier.padding(horizontal = 4.dp)
+   511→   511→        )
+   512→   512→    }
+   513→   513→}
+   514→   514→
+   515→   515→// ─────────────────────────────────────────────────────────────────────────────
+   516→   516→// Workspace Drawer Content
+   517→   517→// ─────────────────────────────────────────────────────────────────────────────
+   518→   518→
+   519→   519→@Composable
+   520→   520→private fun WorkspaceDrawerContent(
+   521→   521→    workspaces: List<Workspace>,
+   522→   522→    activeWorkspaceId: String?,
+   523→   523→    onWorkspaceSelected: (String) -> Unit,
+   524→   524→    onNavigateToBookmarks: () -> Unit,
+   525→   525→    onNavigateToSettings: () -> Unit,
+   526→   526→    onNavigateToHistory: () -> Unit,
+   527→   527→) {
+   528→   528→    ModalDrawerSheet(
+   529→   529→        drawerContainerColor = MaterialTheme.colorScheme.surface
+   530→   530→    ) {
+   531→   531→        // Header
+   532→   532→        Column(
+   533→   533→            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+   534→   534→        ) {
+   535→   535→            Text(
+   536→   536→                text = "WebHub",
+   537→   537→                style = MaterialTheme.typography.titleLarge,
+   538→   538→                fontWeight = FontWeight.Bold,
+   539→   539→                color = MaterialTheme.colorScheme.onSurface
+   540→   540→            )
+   541→   541→            Spacer(Modifier.height(4.dp))
+   542→   542→            Text(
+   543→   543→                text = "Workspaces",
+   544→   544→                style = MaterialTheme.typography.labelMedium,
+   545→   545→                color = MaterialTheme.colorScheme.onSurfaceVariant
+   546→   546→            )
+   547→   547→        }
+   548→   548→
+   549→   549→        HorizontalDivider(
+   550→   550→            modifier = Modifier.padding(vertical = 4.dp),
+   551→   551→            color = MaterialTheme.colorScheme.outlineVariant
+   552→   552→        )
+   553→   553→
+   554→   554→        // Workspace list
+   555→   555→        LazyColumn(
+   556→   556→            modifier = Modifier.weight(1f),
+   557→   557→            contentPadding = PaddingValues(vertical = 4.dp)
+   558→   558→        ) {
+   559→   559→            items(workspaces, key = { it.id }) { workspace ->
+   560→   560→                NavigationDrawerItem(
+   561→   561→                    icon = {
+   562→   562→                        Icon(
+   563→   563→                            imageVector = Icons.Default.Folder,
+   564→   564→                            contentDescription = null,
+   565→   565→                            modifier = Modifier.size(24.dp)
+   566→   566→                        )
+   567→   567→                    },
+   568→   568→                    label = {
+   569→   569→                        Text(
+   570→   570→                            text = workspace.name,
+   571→   571→                            maxLines = 1,
+   572→   572→                            overflow = TextOverflow.Ellipsis
+   573→   573→                        )
+   574→   574→                    },
+   575→   575→                    selected = workspace.id == activeWorkspaceId,
+   576→   576→                    onClick = { onWorkspaceSelected(workspace.id) },
+   577→   577→                    modifier = Modifier.padding(horizontal = 12.dp),
+   578→   578→                    colors = NavigationDrawerItemDefaults.colors(
+   579→   579→                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+   580→   580→                        selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+   581→   581→                        unselectedContainerColor = Color.Transparent
+   582→   582→                    )
+   583→   583→                )
+   584→   584→            }
+   585→   585→        }
+   586→   586→
+   587→   587→        HorizontalDivider(
+   588→   588→            modifier = Modifier.padding(vertical = 4.dp),
+   589→   589→            color = MaterialTheme.colorScheme.outlineVariant
+   590→   590→        )
+   591→   591→
+   592→   592→        // Bottom navigation items
+   593→   593→        NavigationDrawerItem(
+   594→   594→            icon = {
+   595→   595→                Icon(
+   596→   596→                    imageVector = Icons.Default.CheckCircle,
+   597→   597→                    contentDescription = null,
+   598→   598→                    modifier = Modifier.size(24.dp)
+   599→   599→                )
+   600→   600→            },
+   601→   601→            label = { Text("Bookmarks") },
+   602→   602→            selected = false,
+   603→   603→            onClick = onNavigateToBookmarks,
+   604→   604→            modifier = Modifier.padding(horizontal = 12.dp)
+   605→   605→        )
+   606→   606→
+   607→   607→        NavigationDrawerItem(
+   608→   608→            icon = {
+   609→   609→                Icon(
+   610→   610→                    imageVector = Icons.Default.History,
+   611→   611→                    contentDescription = null,
+   612→   612→                    modifier = Modifier.size(24.dp)
+   613→   613→                )
+   614→   614→            },
+   615→   615→            label = { Text("Recently Closed") },
+   616→   616→            selected = false,
+   617→   617→            onClick = onNavigateToHistory,
+   618→   618→            modifier = Modifier.padding(horizontal = 12.dp)
+   619→   619→        )
+   620→   620→
+   621→   621→        NavigationDrawerItem(
+   622→   622→            icon = {
+   623→   623→                Icon(
+   624→   624→                    imageVector = Icons.Default.Edit,
+   625→   625→                    contentDescription = null,
+   626→   626→                    modifier = Modifier.size(24.dp)
+   627→   627→                )
+   628→   628→            },
+   629→   629→            label = { Text("Settings") },
+   630→   630→            selected = false,
+   631→   631→            onClick = onNavigateToSettings,
+   632→   632→            modifier = Modifier.padding(horizontal = 12.dp)
+   633→   633→        )
+   634→   634→    }
+   635→   635→}
+   636→   636→
+   637→   637→// ─────────────────────────────────────────────────────────────────────────────
+   638→   638→// FAB: New Tab / Quick Switcher
+   639→   639→// ─────────────────────────────────────────────────────────────────────────────
+   640→   640→
+   641→   641→@OptIn(ExperimentalFoundationApi::class)
+   642→   642→@Composable
+   643→   643→private fun ExtendedNewTabFab(
+   644→   644→    onClick: () -> Unit,
+   645→   645→    onLongClick: () -> Unit,
+   646→   646→) {
+   647→   647→    FloatingActionButton(
+   648→   648→        onClick = onClick,
+   649→   649→        shape = CircleShape,
+   650→   650→        containerColor = MaterialTheme.colorScheme.primary,
+   651→   651→        contentColor = MaterialTheme.colorScheme.onPrimary,
+   652→   652→        elevation = FloatingActionButtonDefaults.elevation(
+   653→   653→            defaultElevation = 6.dp,
+   654→   654→            pressedElevation = 10.dp
+   655→   655→        ),
+   656→   656→        modifier = Modifier
+   657→   657→            .size(48.dp)
+   658→   658→            .combinedClickable(
+   659→   659→                onClick = onClick,
+   660→   660→                onLongClick = onLongClick
+   661→   661→            )
+   662→   662→    ) {
+   663→   663→        Icon(
+   664→   664→            imageVector = Icons.Default.Add,
+   665→   665→            contentDescription = "New tab (long-press for quick switcher)",
+   666→   666→            modifier = Modifier.size(24.dp)
+   667→   667→        )
+   668→   668→    }
+   669→   669→}
+   670→   670→
+   671→   671→// ─────────────────────────────────────────────────────────────────────────────
+   672→   672→// Fullscreen video overlay
+   673→   673→// ─────────────────────────────────────────────────────────────────────────────
+   674→   674→
+   675→   675→@Composable
+   676→   676→private fun FullscreenVideoOverlay(
+   677→   677→    customView: android.view.View,
+   678→   678→    onExitFullscreen: () -> Unit,
+   679→   679→) {
+   680→   680→    Box(modifier = Modifier.fillMaxSize()) {
+   681→   681→        AndroidView(
+   682→   682→            factory = { ctx ->
+   683→   683→                FrameLayout(ctx).also { frameLayout ->
+   684→   684→                    (customView.parent as? ViewGroup)?.removeView(customView)
+   685→   685→                    frameLayout.addView(customView)
+   686→   686→                }
+   687→   687→            },
+   688→   688→            update = { parent ->
+   689→   689→                customView.layoutParams = ViewGroup.LayoutParams(
+   690→   690→                    ViewGroup.LayoutParams.MATCH_PARENT,
+   691→   691→                    ViewGroup.LayoutParams.MATCH_PARENT
+   692→   692→                )
+   693→   693→            },
+   694→   694→            modifier = Modifier.fillMaxSize()
+   695→   695→        )
+   696→   696→        // Exit fullscreen button
+   697→   697→        FloatingActionButton(
+   698→   698→            onClick = onExitFullscreen,
+   699→   699→            containerColor = Color.Black.copy(alpha = 0.6f),
+   700→   700→            modifier = Modifier
+   701→   701→                .align(Alignment.TopEnd)
+   702→   702→                .padding(16.dp)
+   703→   703→                .size(48.dp)
+   704→   704→        ) {
+   705→   705→            Icon(
+   706→   706→                imageVector = Icons.Default.ViewAgenda,
+   707→   707→                contentDescription = "Exit fullscreen",
+   708→   708→                tint = Color.White
+   709→   709→            )
+   710→   710→        }
+   711→   711→    }
+   712→   712→}
+   713→   713→
+   714→   714→// ─────────────────────────────────────────────────────────────────────────────
+   715→   715→// Home placeholder when no tab content is loaded
+   716→   716→// ─────────────────────────────────────────────────────────────────────────────
+   717→   717→
+   718→   718→@Composable
+   719→   719→private fun HomePlaceholder(
+   720→   720→    onSearch: (String) -> Unit,
+   721→   721→    onNavigateToBookmarks: () -> Unit,
+   722→   722→) {
+   723→   723→    var searchQuery by remember { mutableStateOf("") }
+   724→   724→
+   725→   725→    Column(
+   726→   726→        horizontalAlignment = Alignment.CenterHorizontally,
+   727→   727→        verticalArrangement = Arrangement.Center,
+   728→   728→        modifier = Modifier
+   729→   729→            .fillMaxSize()
+   730→   730→            .padding(32.dp)
+   731→   731→    ) {
+   732→   732→        Text(
+   733→   733→            text = "WebHub",
+   734→   734→            style = MaterialTheme.typography.headlineLarge,
+   735→   735→            fontWeight = FontWeight.Bold,
+   736→   736→            color = MaterialTheme.colorScheme.primary
+   737→   737→        )
+   738→   738→        Spacer(Modifier.height(8.dp))
+   739→   739→        Text(
+   740→   740→            text = "Search or enter a URL to get started",
+   741→   741→            style = MaterialTheme.typography.bodyMedium,
+   742→   742→            color = MaterialTheme.colorScheme.onSurfaceVariant
+   743→   743→        )
+   744→   744→
+   745→   745→        Spacer(Modifier.height(32.dp))
+   746→   746→
+   747→   747→        // Search input
+   748→   748→        Surface(
+   749→   749→            shape = RoundedCornerShape(28.dp),
+   750→   750→            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+   751→   751→            tonalElevation = 2.dp,
+   752→   752→            modifier = Modifier.fillMaxWidth()
+   753→   753→        ) {
+   754→   754→            Row(
+   755→   755→                verticalAlignment = Alignment.CenterVertically,
+   756→   756→                modifier = Modifier
+   757→   757→                    .padding(horizontal = 16.dp, vertical = 12.dp)
+   758→   758→                    .fillMaxWidth()
+   759→   759→            ) {
+   760→   760→                Icon(
+   761→   761→                    imageVector = Icons.Default.Folder,
+   762→   762→                    contentDescription = null,
+   763→   763→                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+   764→   764→                    modifier = Modifier.size(20.dp)
+   765→   765→                )
+   766→   766→                Spacer(Modifier.width(12.dp))
+   767→   767→                BasicTextField(
+   768→   768→                    value = searchQuery,
+   769→   769→                    onValueChange = { searchQuery = it },
+   770→   770→                    modifier = Modifier.weight(1f),
+   771→   771→                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+   772→   772→                        color = MaterialTheme.colorScheme.onSurface
+   773→   773→                    ),
+   774→   774→                    singleLine = true,
+   775→   775→                    keyboardOptions = KeyboardOptions(
+   776→   776→                        imeAction = ImeAction.Search
+   777→   777→                    ),
+   778→   778→                    keyboardActions = KeyboardActions(
+   779→   779→                        onSearch = {
+   780→   780→                            if (searchQuery.isNotBlank()) {
+   781→   781→                                onSearch(searchQuery)
+   782→   782→                                searchQuery = ""
+   783→   783→                            }
+   784→   784→                        }
+   785→   785→                    )
+   786→   786→                )
+   787→   787→            }
+   788→   788→        }
+   789→   789→
+   790→   790→        Spacer(Modifier.height(24.dp))
+   791→   791→
+   792→   792→        // Quick-action shortcuts
+   793→   793→        Row(
+   794→   794→            horizontalArrangement = Arrangement.spacedBy(12.dp)
+   795→   795→        ) {
+   796→   796→            ShortcutChip(
+   797→   797→                label = "Bookmarks",
+   798→   798→                icon = Icons.Default.CheckCircle,
+   799→   799→                onClick = onNavigateToBookmarks
+   800→   800→            )
+   801→   801→        }
+   802→   802→    }
+   803→   803→}
+   804→   804→
+   805→   805→@Composable
+   806→   806→private fun ShortcutChip(
+   807→   807→    label: String,
+   808→   808→    icon: ImageVector,
+   809→   809→    onClick: () -> Unit,
+   810→   810→) {
+   811→   811→    Surface(
+   812→   812→        shape = RoundedCornerShape(16.dp),
+   813→   813→        color = MaterialTheme.colorScheme.surfaceVariant,
+   814→   814→        modifier = Modifier.clickable(onClick = onClick)
+   815→   815→    ) {
+   816→   816→        Row(
+   817→   817→            verticalAlignment = Alignment.CenterVertically,
+   818→   818→            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+   819→   819→        ) {
+   820→   820→            Icon(
+   821→   821→                imageVector = icon,
+   822→   822→                contentDescription = label,
+   823→   823→                tint = MaterialTheme.colorScheme.primary,
+   824→   824→                modifier = Modifier.size(18.dp)
+   825→   825→            )
+   826→   826→            Spacer(Modifier.width(6.dp))
+   827→   827→            Text(
+   828→   828→                text = label,
+   829→   829→                style = MaterialTheme.typography.labelLarge,
+   830→   830→                color = MaterialTheme.colorScheme.onSurfaceVariant
+   831→   831→            )
+   832→   832→        }
+   833→   833→    }
+   834→   834→}
+   835→   835→
+   836→   836→// ─────────────────────────────────────────────────────────────────────────────
+   837→   837→// Hibernated tab placeholder
+   838→   838→// ─────────────────────────────────────────────────────────────────────────────
+   839→   839→
+   840→   840→@Composable
+   841→   841→private fun HibernatedTabPlaceholder(
+   842→   842→    tab: Tab,
+   843→   843→    onWake: () -> Unit,
+   844→   844→) {
+   845→   845→    Column(
+   846→   846→        horizontalAlignment = Alignment.CenterHorizontally,
+   847→   847→        verticalArrangement = Arrangement.Center,
+   848→   848→        modifier = Modifier
+   849→   849→            .fillMaxSize()
+   850→   850→            .padding(32.dp)
+   851→   851→    ) {
+   852→   852→        Text(
+   853→   853→            text = "Tab is sleeping to save memory",
+   854→   854→            style = MaterialTheme.typography.titleMedium,
+   855→   855→            fontWeight = FontWeight.SemiBold,
+   856→   856→            color = MaterialTheme.colorScheme.onSurface,
+   857→   857→            maxLines = 2,
+   858→   858→            overflow = TextOverflow.Ellipsis
+   859→   859→        )
+   860→   860→        Spacer(Modifier.height(8.dp))
+   861→   861→        Text(
+   862→   862→            text = tab.title.ifBlank { UrlNormalizer.getDomainFromUrl(tab.url) },
+   863→   863→            style = MaterialTheme.typography.bodyMedium,
+   864→   864→            color = MaterialTheme.colorScheme.onSurfaceVariant,
+   865→   865→            maxLines = 2,
+   866→   866→            overflow = TextOverflow.Ellipsis
+   867→   867→        )
+   868→   868→        Spacer(Modifier.height(24.dp))
+   869→   869→        TextButton(onClick = onWake) {
+   870→   870→            Text("Wake Tab")
+   871→   871→        }
+   872→   872→    }
+   873→   873→}
+   874→   874→
+   875→   875→// ─────────────────────────────────────────────────────────────────────────────
+   876→   876→// Overflow menu dialog
+   877→   877→// ─────────────────────────────────────────────────────────────────────────────
+   878→   878→
+   879→   879→@Composable
+   880→   880→private fun OverflowMenuDialog(
+   881→   881→    onDismiss: () -> Unit,
+   882→   882→    onTabOverview: () -> Unit,
+   883→   883→    onNewTab: () -> Unit,
+   884→   884→    onBookmarks: () -> Unit,
+   885→   885→    onHistory: () -> Unit,
+   886→   886→    onSettings: () -> Unit,
+   887→   887→) {
+   888→   888→    Dialog(
+   889→   889→        onDismissRequest = onDismiss,
+   890→   890→        properties = DialogProperties(
+   891→   891→            usePlatformDefaultWidth = false,
+   892→   892→            dismissOnBackPress = true,
+   893→   893→            dismissOnClickOutside = true
+   894→   894→        )
+   895→   895→    ) {
+   896→   896→        Surface(
+   897→   897→            shape = RoundedCornerShape(28.dp),
+   898→   898→            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+   899→   899→            tonalElevation = 6.dp,
+   900→   900→            modifier = Modifier
+   901→   901→                .fillMaxWidth(0.85f)
+   902→   902→                .padding(16.dp)
+   903→   903→        ) {
+   904→   904→            Column(
+   905→   905→                modifier = Modifier.padding(vertical = 8.dp)
+   906→   906→            ) {
+   907→   907→                MenuDialogItem(
+   908→   908→                    label = "Tab overview",
+   909→   909→                    icon = Icons.Default.ViewAgenda,
+   910→   910→                    onClick = onTabOverview
+   911→   911→                )
+   912→   912→                MenuDialogItem(
+   913→   913→                    label = "New tab",
+   914→   914→                    icon = Icons.Default.Add,
+   915→   915→                    onClick = onNewTab
+   916→   916→                )
+   917→   917→                HorizontalDivider(
+   918→   918→                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
+   919→   919→                    color = MaterialTheme.colorScheme.outlineVariant
+   920→   920→                )
+   921→   921→                MenuDialogItem(
+   922→   922→                    label = "Bookmarks",
+   923→   923→                    icon = Icons.Default.CheckCircle,
+   924→   924→                    onClick = onBookmarks
+   925→   925→                )
+   926→   926→                MenuDialogItem(
+   927→   927→                    label = "Recently closed",
+   928→   928→                    icon = Icons.Default.History,
+   929→   929→                    onClick = onHistory
+   930→   930→                )
+   931→   931→                HorizontalDivider(
+   932→   932→                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
+   933→   933→                    color = MaterialTheme.colorScheme.outlineVariant
+   934→   934→                )
+   935→   935→                MenuDialogItem(
+   936→   936→                    label = "Settings",
+   937→   937→                    icon = Icons.Default.Edit,
+   938→   938→                    onClick = onSettings
+   939→   939→                )
+   940→   940→            }
+   941→   941→        }
+   942→   942→    }
+   943→   943→}
+   944→   944→
+   945→   945→@Composable
+   946→   946→private fun MenuDialogItem(
+   947→   947→    label: String,
+   948→   948→    icon: ImageVector,
+   949→   949→    onClick: () -> Unit,
+   950→   950→) {
+   951→   951→    Row(
+   952→   952→        verticalAlignment = Alignment.CenterVertically,
+   953→   953→        modifier = Modifier
+   954→   954→            .fillMaxWidth()
+   955→   955→            .clickable(onClick = onClick)
+   956→   956→            .padding(horizontal = 20.dp, vertical = 14.dp)
+   957→   957→    ) {
+   958→   958→        Icon(
+   959→   959→            imageVector = icon,
+   960→   960→            contentDescription = label,
+   961→   961→            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+   962→   962→            modifier = Modifier.size(22.dp)
+   963→   963→        )
+   964→   964→        Spacer(Modifier.width(16.dp))
+   965→   965→        Text(
+   966→   966→            text = label,
+   967→   967→            style = MaterialTheme.typography.bodyLarge,
+   968→   968→            color = MaterialTheme.colorScheme.onSurface
+   969→   969→        )
+   970→   970→    }
+   971→   971→}
+   972→   972→
+   973→   973→// ─────────────────────────────────────────────────────────────────────────────
+   974→   974→// Placeholder composables for sheets/overlays.
+   975→   975→// These will be replaced by real implementations in dedicated files.
+   976→   976→// ─────────────────────────────────────────────────────────────────────────────
+   977→   977→
+   978→   978→// region Placeholder composables
+   979→   979→
+   980→   980→/**
+   981→   981→ * Workspace switcher bottom sheet.
+   982→   982→ * TODO: Move to ui/workspace/WorkspaceSwitcherSheet.kt
+   983→   983→ */
+   984→   984→@Composable
+   985→   985→private fun WorkspaceSwitcherSheet(
+   986→   986→    viewModel: WorkspaceViewModel,
+   987→   987→    onDismiss: () -> Unit,
+   988→   988→) {
+   989→   989→    Text("WorkspaceSwitcherSheet")
+   990→   990→}
+   991→   991→
+   992→   992→/**
+   993→   993→ * Add-tab bottom sheet.
+   994→   994→ * TODO: Move to ui/addtab/AddTabSheet.kt
+   995→   995→ */
+   996→   996→@Composable
+   997→   997→private fun AddTabSheet(
+   998→   998→    viewModel: AddTabViewModel,
+   999→   999→    onTabCreated: (String, String?) -> Unit,
+  1000→  1000→    onDismiss: () -> Unit,
+  1001→  1001→) {
+  1002→  1002→    Text("AddTabSheet")
+  1003→  1003→}
+  1004→  1004→
+  1005→  1005→/**
+  1006→  1006→ * Recently-closed tabs bottom sheet.
+  1007→  1007→ * TODO: Move to ui/main/RecentlyClosedSheet.kt
+  1008→  1008→ */
+  1009→  1009→@Composable
+  1010→  1010→private fun RecentlyClosedSheet(
+  1011→  1011→    onRestore: (String) -> Unit,
+  1012→  1012→    onDismiss: () -> Unit,
+  1013→  1013→) {
+  1014→  1014→    Text("RecentlyClosedSheet")
+  1015→  1015→}
+  1016→  1016→
+  1017→  1017→/**
+  1018→  1018→ * Quick-switcher overlay dialog.
+  1019→  1019→ * TODO: Move to ui/main/QuickSwitcherOverlay.kt
+  1020→  1020→ */
+  1021→  1021→@Composable
+  1022→  1022→private fun QuickSwitcherOverlay(
+  1023→  1023→    query: String,
+  1024→  1024→    tabs: List<Tab>,
+  1025→  1025→    activeTabId: String?,
+  1026→  1026→    onQueryChanged: (String) -> Unit,
+  1027→  1027→    onTabSelected: (String) -> Unit,
+  1028→  1028→    onDismiss: () -> Unit,
+  1029→  1029→) {
+  1030→  1030→    Dialog(
+  1031→  1031→        onDismissRequest = onDismiss,
+  1032→  1032→        properties = DialogProperties(
+  1033→  1033→            usePlatformDefaultWidth = false,
+  1034→  1034→            dismissOnBackPress = true,
+  1035→  1035→            dismissOnClickOutside = true
+  1036→  1036→        )
+  1037→  1037→    ) {
+  1038→  1038→        Surface(
+  1039→  1039→            shape = RoundedCornerShape(28.dp),
+  1040→  1040→            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+  1041→  1041→            tonalElevation = 8.dp,
+  1042→  1042→            modifier = Modifier
+  1043→  1043→                .fillMaxWidth(0.92f)
+  1044→  1044→                .fillMaxHeight(0.7f)
+  1045→  1045→                .padding(16.dp)
+  1046→  1046→        ) {
+  1047→  1047→            Column(
+  1048→  1048→                modifier = Modifier.padding(16.dp)
+  1049→  1049→            ) {
+  1050→  1050→                Text(
+  1051→  1051→                    text = "Switch Tabs",
+  1052→  1052→                    style = MaterialTheme.typography.titleLarge,
+  1053→  1053→                    fontWeight = FontWeight.Bold,
+  1054→  1054→                    modifier = Modifier.padding(bottom = 12.dp)
+  1055→  1055→                )
+  1056→  1056→
+  1057→  1057→                var searchQuery by remember { mutableStateOf(query) }
+  1058→  1058→                LaunchedEffect(query) { searchQuery = query }
+  1059→  1059→
+  1060→  1060→                Surface(
+  1061→  1061→                    shape = RoundedCornerShape(16.dp),
+  1062→  1062→                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+  1063→  1063→                    modifier = Modifier.fillMaxWidth()
+  1064→  1064→                ) {
+  1065→  1065→                    BasicTextField(
+  1066→  1066→                        value = searchQuery,
+  1067→  1067→                        onValueChange = {
+  1068→  1068→                            searchQuery = it
+  1069→  1069→                            onQueryChanged(it)
+  1070→  1070→                        },
+  1071→  1071→                        modifier = Modifier
+  1072→  1072→                            .fillMaxWidth()
+  1073→  1073→                            .padding(horizontal = 16.dp, vertical = 14.dp),
+  1074→  1074→                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+  1075→  1075→                            color = MaterialTheme.colorScheme.onSurface
+  1076→  1076→                        ),
+  1077→  1077→                        singleLine = true
+  1078→  1078→                    )
+  1079→  1079→                }
+  1080→  1080→
+  1081→  1081→                Spacer(Modifier.height(12.dp))
+  1082→  1082→
+  1083→  1083→                LazyColumn(
+  1084→  1084→                    verticalArrangement = Arrangement.spacedBy(4.dp),
+  1085→  1085→                    modifier = Modifier.weight(1f)
+  1086→  1086→                ) {
+  1087→  1087→                    items(tabs, key = { it.id }) { tab ->
+  1088→  1088→                        val isActive = tab.id == activeTabId
+  1089→  1089→                        Surface(
+  1090→  1090→                            shape = RoundedCornerShape(12.dp),
+  1091→  1091→                            color = if (isActive) {
+  1092→  1092→                                MaterialTheme.colorScheme.primaryContainer
+  1093→  1093→                            } else {
+  1094→  1094→                                Color.Transparent
+  1095→  1095→                            },
+  1096→  1096→                            modifier = Modifier
+  1097→  1097→                                .fillMaxWidth()
+  1098→  1098→                                .clickable { onTabSelected(tab.id) }
+  1099→  1099→                        ) {
+  1100→  1100→                            Row(
+  1101→  1101→                                verticalAlignment = Alignment.CenterVertically,
+  1102→  1102→                                modifier = Modifier
+  1103→  1103→                                    .fillMaxWidth()
+  1104→  1104→                                    .padding(horizontal = 12.dp, vertical = 12.dp)
+  1105→  1105→                            ) {
+  1106→  1106→                                Column(modifier = Modifier.weight(1f)) {
+  1107→  1107→                                    Text(
+  1108→  1108→                                        text = tab.title.ifBlank {
+  1109→  1109→                                            UrlNormalizer.getDomainFromUrl(tab.url)
+  1110→  1110→                                        },
+  1111→  1111→                                        style = MaterialTheme.typography.bodyLarge,
+  1112→  1112→                                        fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
+  1113→  1113→                                        maxLines = 1,
+  1114→  1114→                                        overflow = TextOverflow.Ellipsis
+  1115→  1115→                                    )
+  1116→  1116→                                    Text(
+  1117→  1117→                                        text = tab.url,
+  1118→  1118→                                        style = MaterialTheme.typography.bodySmall,
+  1119→  1119→                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+  1120→  1120→                                        maxLines = 1,
+  1121→  1121→                                        overflow = TextOverflow.Ellipsis
+  1122→  1122→                                    )
+  1123→  1123→                                }
+  1124→  1124→                                if (isActive) {
+  1125→  1125→                                    Icon(
+  1126→  1126→                                        imageVector = Icons.Default.CheckCircle,
+  1127→  1127→                                        contentDescription = "Current tab",
+  1128→  1128→                                        tint = MaterialTheme.colorScheme.primary,
+  1129→  1129→                                        modifier = Modifier.size(20.dp)
+  1130→  1130→                                    )
+  1131→  1131→                                }
+  1132→  1132→                            }
+  1133→  1133→                        }
+  1134→  1134→                    }
+  1135→  1135→                }
+  1136→  1136→            }
+  1137→  1137→        }
+  1138→  1138→    }
+  1139→  1139→}
+  1140→  1140→
+  1141→  1141→/**
+  1142→  1142→ * Full-screen tab overview grid.
+  1143→  1143→ * TODO: Move to ui/overview/TabOverviewScreen.kt
+  1144→  1144→ */
+  1145→  1145→@Composable
+  1146→  1146→private fun TabOverviewScreen(
+  1147→  1147→    onTabSelected: (String) -> Unit,
+  1148→  1148→    onDismiss: () -> Unit,
+  1149→  1149→    onAddTab: () -> Unit,
+  1150→  1150→) {
+  1151→  1151→    Box(
+  1152→  1152→        modifier = Modifier
+  1153→  1153→            .fillMaxSize()
+  1154→  1154→            .background(MaterialTheme.colorScheme.surface)
+  1155→  1155→            .padding(16.dp)
+  1156→  1156→    ) {
+  1157→  1157→        Column {
+  1158→  1158→            Row(
+  1159→  1159→                verticalAlignment = Alignment.CenterVertically,
+  1160→  1160→                modifier = Modifier.fillMaxWidth()
+  1161→  1161→            ) {
+  1162→  1162→                Text(
+  1163→  1163→                    text = "Tab Overview",
+  1164→  1164→                    style = MaterialTheme.typography.headlineSmall,
+  1165→  1165→                    fontWeight = FontWeight.Bold,
+  1166→  1166→                    modifier = Modifier.weight(1f)
+  1167→  1167→                )
+  1168→  1168→                TextButton(onClick = onDismiss) {
+  1169→  1169→                    Text("Done")
+  1170→  1170→                }
+  1171→  1171→            }
+  1172→  1172→            Spacer(Modifier.height(16.dp))
+  1173→  1173→            Text(
+  1174→  1174→                text = "Tab grid will be displayed here.",
+  1175→  1175→                style = MaterialTheme.typography.bodyMedium,
+  1176→  1176→                color = MaterialTheme.colorScheme.onSurfaceVariant
+  1177→  1177→            )
+  1178→  1178→        }
+  1179→  1179→    }
+  1180→  1180→}
+  1181→  1181→
+  1182→  1182→// endregion
+  1183→  1183→

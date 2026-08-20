@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Fingerprint
@@ -54,7 +55,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -332,7 +332,7 @@ fun SettingsScreen(
                     headlineContent = { Text("Save current session") },
                     supportingContent = { Text("Save all open tabs as a restorable session") },
                     leadingContent = {
-                        Icon(Icons.Default.Save, contentDescription = null)
+                        Icon(Icons.Default.NoteAdd, contentDescription = null)
                     },
                     modifier = Modifier.clickable {
                         sessionNameInput = ""

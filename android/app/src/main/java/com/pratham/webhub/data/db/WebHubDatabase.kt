@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
-import com.pratham.webhub.data.db.converter.Converters
 import com.pratham.webhub.data.db.dao.BookmarkDao
 import com.pratham.webhub.data.db.dao.ClosedTabHistoryDao
 import com.pratham.webhub.data.db.dao.SessionSnapshotDao
@@ -28,7 +26,6 @@ import com.pratham.webhub.data.db.entity.WorkspaceEntity
     version = 1,
     exportSchema = false
 )
-@TypeConverters(Converters::class)
 abstract class WebHubDatabase : RoomDatabase() {
 
     abstract fun tabDao(): TabDao

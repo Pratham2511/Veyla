@@ -1,0 +1,682 @@
+     1→     1→package com.pratham.webhub.ui.settings
+     2→     2→
+     3→     3→import android.net.Uri
+     4→     4→import androidx.compose.foundation.clickable
+     5→     5→import androidx.compose.foundation.layout.Arrangement
+     6→     6→import androidx.compose.foundation.layout.Column
+     7→     7→import androidx.compose.foundation.layout.Row
+     8→     8→import androidx.compose.foundation.layout.Spacer
+     9→     9→import androidx.compose.foundation.layout.fillMaxSize
+    10→    10→import androidx.compose.foundation.layout.fillMaxWidth
+    11→    11→import androidx.compose.foundation.layout.height
+    12→    12→import androidx.compose.foundation.layout.padding
+    13→    13→import androidx.compose.foundation.layout.size
+    14→    14→import androidx.compose.foundation.layout.width
+    15→    15→import androidx.compose.foundation.lazy.LazyColumn
+    16→    16→import androidx.compose.foundation.lazy.items
+    17→    17→import androidx.compose.material.icons.Icons
+    18→    18→import androidx.compose.material.icons.automirrored.filled.ArrowBack
+    19→    19→import androidx.compose.material.icons.automirrored.filled.OpenInNew
+    20→    20→import androidx.compose.material.icons.filled.Block
+    21→    21→import androidx.compose.material.icons.filled.Code
+    22→    22→import androidx.compose.material.icons.filled.DarkMode
+    23→    23→import androidx.compose.material.icons.filled.DeleteSweep
+    24→    24→import androidx.compose.material.icons.filled.Fingerprint
+    25→    25→import androidx.compose.material.icons.filled.History
+    26→    26→import androidx.compose.material.icons.filled.Https
+    27→    27→import androidx.compose.material.icons.filled.Info
+    28→    28→import androidx.compose.material.icons.filled.LightMode
+    29→    29→import androidx.compose.material.icons.filled.Palette
+    30→    30→import androidx.compose.material.icons.filled.Restore
+    31→    31→import androidx.compose.material.icons.filled.Search
+    32→    32→import androidx.compose.material.icons.filled.Security
+    33→    33→import androidx.compose.material.icons.filled.Stars
+    34→    34→import androidx.compose.material3.AlertDialog
+    35→    35→import androidx.compose.material3.Button
+    36→    36→import androidx.compose.material3.ExperimentalMaterial3Api
+    37→    37→import androidx.compose.material3.ExposedDropdownMenuBox
+    38→    38→import androidx.compose.material3.ExposedDropdownMenuDefaults
+    39→    39→import androidx.compose.material3.HorizontalDivider
+    40→    40→import androidx.compose.material3.Icon
+    41→    41→import androidx.compose.material3.IconButton
+    42→    42→import androidx.compose.material3.LinearProgressIndicator
+    43→    43→import androidx.compose.material3.ListItem
+    44→    44→import androidx.compose.material3.MaterialTheme
+    45→    45→import androidx.compose.material3.MenuAnchorType
+    46→    46→import androidx.compose.material3.OutlinedTextField
+    47→    47→import androidx.compose.material3.Scaffold
+    48→    48→import androidx.compose.material3.SegmentedButton
+    49→    49→import androidx.compose.material3.SegmentedButtonDefaults
+    50→    50→import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+    51→    51→import androidx.compose.material3.Switch
+    52→    52→import androidx.compose.material3.Text
+    53→    53→import androidx.compose.material3.TextButton
+    54→    54→import androidx.compose.material3.TopAppBar
+    55→    55→import androidx.compose.material3.TopAppBarDefaults
+    56→    56→import androidx.compose.runtime.Composable
+    57→    57→import androidx.compose.runtime.collectAsStateWithLifecycle
+    58→    58→import androidx.compose.runtime.getValue
+    59→    59→import androidx.compose.runtime.mutableStateOf
+    60→    60→import androidx.compose.runtime.remember
+    61→    61→import androidx.compose.runtime.setValue
+    62→    62→import androidx.compose.ui.Alignment
+    63→    63→import androidx.compose.ui.Modifier
+    64→    64→import androidx.compose.ui.graphics.vector.ImageVector
+    65→    65→import androidx.compose.ui.platform.LocalContext
+    66→    66→import androidx.compose.ui.text.font.FontWeight
+    67→    67→import androidx.compose.ui.text.style.TextOverflow
+    68→    68→import androidx.compose.ui.unit.dp
+    69→    69→import androidx.hilt.navigation.compose.hiltViewModel
+    70→    70→import androidx.lifecycle.compose.collectAsStateWithLifecycle
+    71→    71→import com.pratham.webhub.BuildConfig
+    72→    72→import com.pratham.webhub.R
+    73→    73→import com.pratham.webhub.util.SearchEngineHelper
+    74→    74→import java.text.SimpleDateFormat
+    75→    75→import java.util.Date
+    76→    76→import java.util.Locale
+    77→    77→
+    78→    78→// ── Theme options ─────────────────────────────────────────────────────────────
+    79→    79→
+    80→    80→private enum class ThemeOption(val value: String, val label: String, val icon: ImageVector) {
+    81→    81→    System("system", "System", Icons.Default.Palette),
+    82→    82→    Light("light", "Light", Icons.Default.LightMode),
+    83→    83→    Dark("dark", "Dark", Icons.Default.DarkMode),
+    84→    84→}
+    85→    85→
+    86→    86→// ── Main composable ───────────────────────────────────────────────────────────
+    87→    87→
+    88→    88→/**
+    89→    89→ * Full-screen settings for WebHub.
+    90→    90→ *
+    91→    91→ * @param onBack Called when the user presses the back button.
+    92→    92→ */
+    93→    93→@OptIn(ExperimentalMaterial3Api::class)
+    94→    94→@Composable
+    95→    95→fun SettingsScreen(
+    96→    96→    onBack: () -> Unit,
+    97→    97→    viewModel: SettingsViewModel = hiltViewModel(),
+    98→    98→) {
+    99→    99→    val state by viewModel.state.collectAsStateWithLifecycle()
+   100→   100→
+   101→   101→    // Dialog state
+   102→   102→    var showClearDataDialog by remember { mutableStateOf(false) }
+   103→   103→    var showDeleteSessionDialog by remember { mutableStateOf<String?>(null) }
+   104→   104→    var showSaveSessionDialog by remember { mutableStateOf(false) }
+   105→   105→    var sessionNameInput by remember { mutableStateOf("") }
+   106→   106→
+   107→   107→    Scaffold(
+   108→   108→        topBar = {
+   109→   109→            TopAppBar(
+   110→   110→                title = { Text("Settings") },
+   111→   111→                navigationIcon = {
+   112→   112→                    IconButton(onClick = onBack) {
+   113→   113→                        Icon(
+   114→   114→                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+   115→   115→                            contentDescription = "Back"
+   116→   116→                        )
+   117→   117→                    }
+   118→   118→                },
+   119→   119→                colors = TopAppBarDefaults.topAppBarColors(
+   120→   120→                    containerColor = MaterialTheme.colorScheme.surface
+   121→   121→                )
+   122→   122→            )
+   123→   123→        }
+   124→   124→    ) { innerPadding ->
+   125→   125→        LazyColumn(
+   126→   126→            modifier = Modifier
+   127→   127→                .fillMaxSize()
+   128→   128→                .padding(innerPadding),
+   129→   129→            verticalArrangement = Arrangement.spacedBy(0.dp)
+   130→   130→        ) {
+   131→   131→            // ═══════════════════════════════════════════════════════════════════
+   132→   132→            // Section 1: Appearance
+   133→   133→            // ═══════════════════════════════════════════════════════════════════
+   134→   134→            item {
+   135→   135→                SectionHeader("Appearance")
+   136→   136→            }
+   137→   137→
+   138→   138→            item {
+   139→   139→                // Theme selector
+   140→   140→                Column(
+   141→   141→                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+   142→   142→                ) {
+   143→   143→                    Text(
+   144→   144→                        text = "Theme",
+   145→   145→                        style = MaterialTheme.typography.bodyMedium,
+   146→   146→                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+   147→   147→                        modifier = Modifier.padding(bottom = 8.dp)
+   148→   148→                    )
+   149→   149→                    val currentTheme = ThemeOption.entries.find {
+   150→   150→                        it.value == state.settings.globalThemeMode
+   151→   151→                    } ?: ThemeOption.System
+   152→   152→
+   153→   153→                    SingleChoiceSegmentedButtonRow(
+   154→   154→                        modifier = Modifier.fillMaxWidth()
+   155→   155→                    ) {
+   156→   156→                        ThemeOption.entries.forEachIndexed { index, option ->
+   157→   157→                            SegmentedButton(
+   158→   158→                                shape = SegmentedButtonDefaults.itemShape(index, ThemeOption.entries.size),
+   159→   159→                                onClick = { viewModel.setThemeMode(option.value) },
+   160→   160→                                selected = currentTheme == option,
+   161→   161→                                icon = {
+   162→   162→                                    if (currentTheme == option) {
+   163→   163→                                        // Show a small indicator or leave empty for clean M3 look
+   164→   164→                                    }
+   165→   165→                                }
+   166→   166→                            ) {
+   167→   167→                                Row(verticalAlignment = Alignment.CenterVertically) {
+   168→   168→                                    Icon(
+   169→   169→                                        imageVector = option.icon,
+   170→   170→                                        contentDescription = null,
+   171→   171→                                        modifier = Modifier.size(16.dp)
+   172→   172→                                    )
+   173→   173→                                    Spacer(modifier = Modifier.width(6.dp))
+   174→   174→                                    Text(option.label)
+   175→   175→                                }
+   176→   176→                            }
+   177→   177→                        }
+   178→   178→                    }
+   179→   179→                }
+   180→   180→            }
+   181→   181→
+   182→   182→            item {
+   183→   183→                // Material You info
+   184→   184→                ListItem(
+   185→   185→                    headlineContent = { Text("Material You") },
+   186→   186→                    supportingContent = { Text("Follows your system dynamic color theme") },
+   187→   187→                    leadingContent = {
+   188→   188→                        Icon(Icons.Default.Palette, contentDescription = null)
+   189→   189→                    },
+   190→   190→                    trailingContent = {
+   191→   191→                        Switch(
+   192→   192→                            checked = true,
+   193→   193→                            onCheckedChange = { /* Material You is always on */ },
+   194→   194→                            enabled = false
+   195→   195→                        )
+   196→   196→                    }
+   197→   197→                )
+   198→   198→                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+   199→   199→            }
+   200→   200→
+   201→   201→            // ═══════════════════════════════════════════════════════════════════
+   202→   202→            // Section 2: Browser
+   203→   203→            // ═══════════════════════════════════════════════════════════════════
+   204→   204→            item {
+   205→   205→                SectionHeader("Browser")
+   206→   206→            }
+   207→   207→
+   208→   208→            item {
+   209→   209→                // Search engine dropdown
+   210→   210→                SearchEngineDropdown(
+   211→   211→                    engines = state.searchEngines,
+   212→   212→                    currentEngineName = state.currentSearchEngineName,
+   213→   213→                    onEngineSelected = { url -> viewModel.setSearchEngine(url) }
+   214→   214→                )
+   215→   215→            }
+   216→   216→
+   217→   217→            item {
+   218→   218→                // Ad block toggle
+   219→   219→                ListItem(
+   220→   220→                    headlineContent = { Text("Block ads") },
+   221→   221→                    supportingContent = { Text("Block advertisements and trackers") },
+   222→   222→                    leadingContent = {
+   223→   223→                        Icon(Icons.Default.Block, contentDescription = null)
+   224→   224→                    },
+   225→   225→                    trailingContent = {
+   226→   226→                        Switch(
+   227→   227→                            checked = state.settings.adBlockEnabled,
+   228→   228→                            onCheckedChange = { viewModel.setAdBlockEnabled(it) }
+   229→   229→                        )
+   230→   230→                    }
+   231→   231→                )
+   232→   232→            }
+   233→   233→
+   234→   234→            item {
+   235→   235→                // JavaScript toggle (per-tab default)
+   236→   236→                ListItem(
+   237→   237→                    headlineContent = { Text("JavaScript") },
+   238→   238→                    supportingContent = { Text("Enable JavaScript by default for new tabs") },
+   239→   239→                    leadingContent = {
+   240→   240→                        Icon(Icons.Default.Code, contentDescription = null)
+   241→   241→                    },
+   242→   242→                    trailingContent = {
+   243→   243→                        Switch(
+   244→   244→                            checked = true, // default is on
+   245→   245→                            onCheckedChange = { /* TODO: Wire to per-tab JS default setting */ }
+   246→   246→                        )
+   247→   247→                    }
+   248→   248→                )
+   249→   249→                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+   250→   250→            }
+   251→   251→
+   252→   252→            item {
+   253→   253→                // Clear browsing data
+   254→   254→                ListItem(
+   255→   255→                    headlineContent = { Text("Clear browsing data") },
+   256→   256→                    supportingContent = {
+   257→   257→                        Text("Remove saved sessions and reset ad-block counters")
+   258→   258→                    },
+   259→   259→                    leadingContent = {
+   260→   260→                        Icon(Icons.Default.DeleteSweep, contentDescription = null)
+   261→   261→                    },
+   262→   262→                    modifier = Modifier.clickable { showClearDataDialog = true }
+   263→   263→                )
+   264→   264→            }
+   265→   265→
+   266→   266→            if (state.isClearingData) {
+   267→   267→                item {
+   268→   268→                    LinearProgressIndicator(
+   269→   269→                        modifier = Modifier
+   270→   270→                            .fillMaxWidth()
+   271→   271→                            .padding(horizontal = 16.dp, vertical = 4.dp)
+   272→   272→                    )
+   273→   273→                }
+   274→   274→            }
+   275→   275→
+   276→   276→            // ═══════════════════════════════════════════════════════════════════
+   277→   277→            // Section 3: Privacy
+   278→   278→            // ═══════════════════════════════════════════════════════════════════
+   279→   279→            item {
+   280→   280→                SectionHeader("Privacy")
+   281→   281→            }
+   282→   282→
+   283→   283→            item {
+   284→   284→                ListItem(
+   285→   285→                    headlineContent = { Text("Biometric lock") },
+   286→   286→                    supportingContent = {
+   287→   287→                        if (state.biometricAvailable) {
+   288→   288→                            Text("Require fingerprint to open WebHub")
+   289→   289→                        } else {
+   290→   290→                            Text("No biometric hardware available")
+   291→   291→                        }
+   292→   292→                    },
+   293→   293→                    leadingContent = {
+   294→   294→                        Icon(Icons.Default.Fingerprint, contentDescription = null)
+   295→   295→                    },
+   296→   296→                    trailingContent = {
+   297→   297→                        Switch(
+   298→   298→                            checked = state.settings.isBiometricEnabled,
+   299→   299→                            onCheckedChange = { viewModel.setBiometricEnabled(it) },
+   300→   300→                            enabled = state.biometricAvailable
+   301→   301→                        )
+   302→   302→                    }
+   303→   303→                )
+   304→   304→            }
+   305→   305→
+   306→   306→            item {
+   307→   307→                ListItem(
+   308→   308→                    headlineContent = { Text("HTTPS security") },
+   309→   309→                    supportingContent = {
+   310→   310→                        Text(
+   311→   311→                            "WebHub enforces HTTPS connections where possible. " +
+   312→   312→                                    "Sites with invalid certificates are flagged with a warning."
+   313→   313→                        )
+   314→   314→                    },
+   315→   315→                    leadingContent = {
+   316→   316→                        Icon(Icons.Default.Security, contentDescription = null)
+   317→   317→                    }
+   318→   318→                )
+   319→   319→                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+   320→   320→            }
+   321→   321→
+   322→   322→            // ═══════════════════════════════════════════════════════════════════
+   323→   323→            // Section 4: Sessions
+   324→   324→            // ═══════════════════════════════════════════════════════════════════
+   325→   325→            item {
+   326→   326→                SectionHeader("Sessions")
+   327→   327→            }
+   328→   328→
+   329→   329→            item {
+   330→   330→                // Save current session
+   331→   331→                ListItem(
+   332→   332→                    headlineContent = { Text("Save current session") },
+   333→   333→                    supportingContent = { Text("Save all open tabs as a restorable session") },
+   334→   334→                    leadingContent = {
+   335→   335→                        Icon(Icons.Default.Save, contentDescription = null)
+   336→   336→                    },
+   337→   337→                    modifier = Modifier.clickable {
+   338→   338→                        sessionNameInput = ""
+   339→   339→                        showSaveSessionDialog = true
+   340→   340→                    }
+   341→   341→                )
+   342→   342→            }
+   343→   343→
+   344→   344→            item {
+   345→   345→                // Auto-restore toggle (informational for now)
+   346→   346→                ListItem(
+   347→   347→                    headlineContent = { Text("Auto-restore last session") },
+   348→   348→                    supportingContent = { Text("Automatically restore tabs when WebHub opens") },
+   349→   349→                    leadingContent = {
+   350→   350→                        Icon(Icons.Default.Restore, contentDescription = null)
+   351→   351→                    },
+   352→   352→                    trailingContent = {
+   353→   353→                        Switch(
+   354→   354→                            checked = false,
+   355→   355→                            onCheckedChange = { /* TODO: Wire to auto-restore setting */ }
+   356→   356→                        )
+   357→   357→                    }
+   358→   358→                )
+   359→   359→            }
+   360→   360→
+   361→   361→            if (state.sessions.isEmpty()) {
+   362→   362→                item {
+   363→   363→                    Column(
+   364→   364→                        modifier = Modifier
+   365→   365→                            .fillMaxWidth()
+   366→   366→                            .padding(32.dp),
+   367→   367→                        horizontalAlignment = Alignment.CenterHorizontally
+   368→   368→                    ) {
+   369→   369→                        Icon(
+   370→   370→                            imageVector = Icons.Default.History,
+   371→   371→                            contentDescription = null,
+   372→   372→                            modifier = Modifier.size(48.dp),
+   373→   373→                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+   374→   374→                        )
+   375→   375→                        Spacer(modifier = Modifier.height(12.dp))
+   376→   376→                        Text(
+   377→   377→                            text = "No saved sessions",
+   378→   378→                            style = MaterialTheme.typography.bodyLarge,
+   379→   379→                            color = MaterialTheme.colorScheme.onSurfaceVariant
+   380→   380→                        )
+   381→   381→                        Text(
+   382→   382→                            text = "Save your current session to restore it later",
+   383→   383→                            style = MaterialTheme.typography.bodySmall,
+   384→   384→                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+   385→   385→                        )
+   386→   386→                    }
+   387→   387→                }
+   388→   388→            } else {
+   389→   389→                items(state.sessions, key = { it.id }) { session ->
+   390→   390→                    SessionListItem(
+   391→   391→                        session = session,
+   392→   392→                        onRestore = { viewModel.restoreSession(session.id) },
+   393→   393→                        onDelete = { showDeleteSessionDialog = session.id }
+   394→   394→                    )
+   395→   395→                }
+   396→   396→            }
+   397→   397→
+   398→   398→            // ═══════════════════════════════════════════════════════════════════
+   399→   399→            // Section 5: About
+   400→   400→            // ═══════════════════════════════════════════════════════════════════
+   401→   401→            item {
+   402→   402→                Spacer(modifier = Modifier.height(16.dp))
+   403→   403→                SectionHeader("About")
+   404→   404→            }
+   405→   405→
+   406→   406→            item {
+   407→   407→                ListItem(
+   408→   408→                    headlineContent = { Text("Version") },
+   409→   409→                    supportingContent = {
+   410→   410→                        Text(
+   411→   411→                            BuildConfig.VERSION_NAME
+   412→   412→                                    + " (${BuildConfig.VERSION_CODE})"
+   413→   413→                        )
+   414→   414→                    },
+   415→   415→                    leadingContent = {
+   416→   416→                        Icon(Icons.Default.Info, contentDescription = null)
+   417→   417→                    }
+   418→   418→                )
+   419→   419→            }
+   420→   420→
+   421→   421→            item {
+   422→   422→                val context = LocalContext.current
+   423→   423→                ListItem(
+   424→   424→                    headlineContent = { Text("GitHub") },
+   425→   425→                    supportingContent = {
+   426→   426→                        Text(
+   427→   427→                            "github.com/pratham/webhub",
+   428→   428→                            maxLines = 1,
+   429→   429→                            overflow = TextOverflow.Ellipsis
+   430→   430→                        )
+   431→   431→                    },
+   432→   432→                    leadingContent = {
+   433→   433→                        Icon(Icons.Default.Code, contentDescription = null)
+   434→   434→                    },
+   435→   435→                    trailingContent = {
+   436→   436→                        Icon(
+   437→   437→                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+   438→   438→                            contentDescription = "Open in browser",
+   439→   439→                            tint = MaterialTheme.colorScheme.primary
+   440→   440→                        )
+   441→   441→                    },
+   442→   442→                    modifier = Modifier.clickable {
+   443→   443→                        val intent = android.content.Intent(
+   444→   444→                            android.content.Intent.ACTION_VIEW,
+   445→   445→                            Uri.parse("https://github.com/pratham/webhub")
+   446→   446→                        )
+   447→   447→                        context.startActivity(intent)
+   448→   448→                    }
+   449→   449→                )
+   450→   450→            }
+   451→   451→
+   452→   452→            item {
+   453→   453→                ListItem(
+   454→   454→                    headlineContent = { Text("License") },
+   455→   455→                    supportingContent = { Text("Open-source under the GNU GPLv3 license") },
+   456→   456→                    leadingContent = {
+   457→   457→                        Icon(Icons.Default.Stars, contentDescription = null)
+   458→   458→                    }
+   459→   459→                )
+   460→   460→            }
+   461→   461→
+   462→   462→            // Bottom spacing
+   463→   463→            item { Spacer(modifier = Modifier.height(32.dp)) }
+   464→   464→        }
+   465→   465→    }
+   466→   466→
+   467→   467→    // ── Dialogs ─────────────────────────────────────────────────────────────
+   468→   468→
+   469→   469→    // Clear browsing data confirmation
+   470→   470→    if (showClearDataDialog) {
+   471→   471→        AlertDialog(
+   472→   472→            onDismissRequest = { showClearDataDialog = false },
+   473→   473→            title = { Text("Clear browsing data?") },
+   474→   474→            text = {
+   475→   475→                Text(
+   476→   476→                    "This will delete all saved sessions and reset ad-block " +
+   477→   477→                            "counters. This action cannot be undone."
+   478→   478→                )
+   479→   479→            },
+   480→   480→            confirmButton = {
+   481→   481→                Button(
+   482→   482→                    onClick = {
+   483→   483→                        showClearDataDialog = false
+   484→   484→                        viewModel.clearBrowsingData()
+   485→   485→                    }
+   486→   486→                ) {
+   487→   487→                    Text("Clear")
+   488→   488→                }
+   489→   489→            },
+   490→   490→            dismissButton = {
+   491→   491→                TextButton(onClick = { showClearDataDialog = false }) {
+   492→   492→                    Text("Cancel")
+   493→   493→                }
+   494→   494→            }
+   495→   495→        )
+   496→   496→    }
+   497→   497→
+   498→   498→    // Delete session confirmation
+   499→   499→    if (showDeleteSessionDialog != null) {
+   500→   500→        AlertDialog(
+   501→   501→            onDismissRequest = { showDeleteSessionDialog = null },
+   502→   502→            title = { Text("Delete session?") },
+   503→   503→            text = { Text("This saved session will be permanently removed.") },
+   504→   504→            confirmButton = {
+   505→   505→                Button(
+   506→   506→                    onClick = {
+   507→   507→                        showDeleteSessionDialog?.let { viewModel.deleteSession(it) }
+   508→   508→                        showDeleteSessionDialog = null
+   509→   509→                    }
+   510→   510→                ) {
+   511→   511→                    Text("Delete")
+   512→   512→                }
+   513→   513→            },
+   514→   514→            dismissButton = {
+   515→   515→                TextButton(onClick = { showDeleteSessionDialog = null }) {
+   516→   516→                    Text("Cancel")
+   517→   517→                }
+   518→   518→            }
+   519→   519→        )
+   520→   520→    }
+   521→   521→
+   522→   522→    // Save session dialog
+   523→   523→    if (showSaveSessionDialog) {
+   524→   524→        AlertDialog(
+   525→   525→            onDismissRequest = { showSaveSessionDialog = false },
+   526→   526→            title = { Text("Save session") },
+   527→   527→            text = {
+   528→   528→                OutlinedTextField(
+   529→   529→                    value = sessionNameInput,
+   530→   530→                    onValueChange = { sessionNameInput = it },
+   531→   531→                    label = { Text("Session name") },
+   532→   532→                    singleLine = true,
+   533→   533→                    modifier = Modifier.fillMaxWidth()
+   534→   534→                )
+   535→   535→            },
+   536→   536→            confirmButton = {
+   537→   537→                Button(
+   538→   538→                    onClick = {
+   539→   539→                        val name = sessionNameInput.trim()
+   540→   540→                        if (name.isNotBlank()) {
+   541→   541→                            viewModel.saveSession(name)
+   542→   542→                            showSaveSessionDialog = false
+   543→   543→                        }
+   544→   544→                    },
+   545→   545→                    enabled = sessionNameInput.trim().isNotBlank()
+   546→   546→                ) {
+   547→   547→                    Text("Save")
+   548→   548→                }
+   549→   549→            },
+   550→   550→            dismissButton = {
+   551→   551→                TextButton(onClick = { showSaveSessionDialog = false }) {
+   552→   552→                    Text("Cancel")
+   553→   553→                }
+   554→   554→            }
+   555→   555→        )
+   556→   556→    }
+   557→   557→}
+   558→   558→
+   559→   559→// ── Sub-components ─────────────────────────────────────────────────────────────
+   560→   560→
+   561→   561→@Composable
+   562→   562→private fun SectionHeader(title: String) {
+   563→   563→    Text(
+   564→   564→        text = title,
+   565→   565→        style = MaterialTheme.typography.titleSmall,
+   566→   566→        fontWeight = FontWeight.Bold,
+   567→   567→        color = MaterialTheme.colorScheme.primary,
+   568→   568→        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+   569→   569→    )
+   570→   570→}
+   571→   571→
+   572→   572→@OptIn(ExperimentalMaterial3Api::class)
+   573→   573→@Composable
+   574→   574→private fun SearchEngineDropdown(
+   575→   575→    engines: List<Pair<String, String>>,
+   576→   576→    currentEngineName: String,
+   577→   577→    onEngineSelected: (String) -> Unit,
+   578→   578→) {
+   579→   579→    var expanded by remember { mutableStateOf(false) }
+   580→   580→
+   581→   581→    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+   582→   582→        Text(
+   583→   583→            text = "Default search engine",
+   584→   584→            style = MaterialTheme.typography.bodyMedium,
+   585→   585→            color = MaterialTheme.colorScheme.onSurfaceVariant,
+   586→   586→            modifier = Modifier.padding(bottom = 8.dp)
+   587→   587→        )
+   588→   588→
+   589→   589→        ExposedDropdownMenuBox(
+   590→   590→            expanded = expanded,
+   591→   591→            onExpandedChange = { expanded = it }
+   592→   592→        ) {
+   593→   593→            OutlinedTextField(
+   594→   594→                value = currentEngineName,
+   595→   595→                onValueChange = {},
+   596→   596→                readOnly = true,
+   597→   597→                label = { Text("Search engine") },
+   598→   598→                trailingIcon = {
+   599→   599→                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+   600→   600→                },
+   601→   601→                leadingIcon = {
+   602→   602→                    Icon(Icons.Default.Search, contentDescription = null)
+   603→   603→                },
+   604→   604→                modifier = Modifier
+   605→   605→                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+   606→   606→                    .fillMaxWidth()
+   607→   607→            )
+   608→   608→
+   609→   609→            ExposedDropdownMenu(
+   610→   610→                expanded = expanded,
+   611→   611→                onDismissRequest = { expanded = false }
+   612→   612→            ) {
+   613→   613→                engines.forEach { (name, url) ->
+   614→   614→                    androidx.compose.material3.DropdownMenuItem(
+   615→   615→                        text = { Text(name) },
+   616→   616→                        onClick = {
+   617→   617→                            onEngineSelected(url)
+   618→   618→                            expanded = false
+   619→   619→                        },
+   620→   620→                        trailingIcon = {
+   621→   621→                            if (name == currentEngineName) {
+   622→   622→                                Text(
+   623→   623→                                    "\u2713", // checkmark
+   624→   624→                                    color = MaterialTheme.colorScheme.primary
+   625→   625→                                )
+   626→   626→                            }
+   627→   627→                        }
+   628→   628→                    )
+   629→   629→                }
+   630→   630→            }
+   631→   631→        }
+   632→   632→    }
+   633→   633→}
+   634→   634→
+   635→   635→@Composable
+   636→   636→private fun SessionListItem(
+   637→   637→    session: com.pratham.webhub.domain.model.SessionSnapshot,
+   638→   638→    onRestore: () -> Unit,
+   639→   639→    onDelete: () -> Unit,
+   640→   640→) {
+   641→   641→    val dateFormatted = remember(session.createdAt) {
+   642→   642→        val sdf = SimpleDateFormat("MMM dd, yyyy \u2022 hh:mm a", Locale.getDefault())
+   643→   643→        sdf.format(Date(session.createdAt))
+   644→   644→    }
+   645→   645→
+   646→   646→    ListItem(
+   647→   647→        headlineContent = {
+   648→   648→            Text(
+   649→   649→                session.name,
+   650→   650→                maxLines = 1,
+   651→   651→                overflow = TextOverflow.Ellipsis
+   652→   652→            )
+   653→   653→        },
+   654→   654→        supportingContent = { Text(dateFormatted) },
+   655→   655→        leadingContent = {
+   656→   656→            Icon(
+   657→   657→                imageVector = Icons.Default.History,
+   658→   658→                contentDescription = null
+   659→   659→            )
+   660→   660→        },
+   661→   661→        trailingContent = {
+   662→   662→            Row {
+   663→   663→                IconButton(onClick = onRestore) {
+   664→   664→                    Icon(
+   665→   665→                        imageVector = Icons.Default.Restore,
+   666→   666→                        contentDescription = "Restore session",
+   667→   667→                        tint = MaterialTheme.colorScheme.primary
+   668→   668→                    )
+   669→   669→                }
+   670→   670→                IconButton(onClick = onDelete) {
+   671→   671→                    Icon(
+   672→   672→                        imageVector = Icons.Default.DeleteSweep,
+   673→   673→                        contentDescription = "Delete session",
+   674→   674→                        tint = MaterialTheme.colorScheme.error
+   675→   675→                    )
+   676→   676→                }
+   677→   677→            }
+   678→   678→        }
+   679→   679→    )
+   680→   680→    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+   681→   681→}
+   682→   682→

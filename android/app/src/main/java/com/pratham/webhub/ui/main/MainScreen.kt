@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -65,12 +64,12 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -88,11 +87,18 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pratham.webhub.domain.model.Tab
 import com.pratham.webhub.domain.model.Workspace
+import com.pratham.webhub.ui.addtab.AddTabSheet
 import com.pratham.webhub.ui.addtab.AddTabViewModel
+import com.pratham.webhub.ui.addtab.TabCreationParams
 import com.pratham.webhub.ui.browser.BrowserUiState
 import com.pratham.webhub.ui.browser.BrowserViewModel
 import com.pratham.webhub.ui.components.Omnibox
+import com.pratham.webhub.ui.components.QuickSwitcherOverlay
+import com.pratham.webhub.ui.components.RecentlyClosedSheet
 import com.pratham.webhub.ui.components.TabStrip
+import com.pratham.webhub.ui.overview.TabOverviewScreen
+import com.pratham.webhub.ui.overview.TabOverviewViewModel
+import com.pratham.webhub.ui.workspace.WorkspaceSwitcherSheet
 import com.pratham.webhub.ui.workspace.WorkspaceViewModel
 import com.pratham.webhub.util.UrlNormalizer
 import kotlinx.coroutines.launch
@@ -191,9 +197,10 @@ fun MainScreen(
     // ═══════════════════════════════════════════════════════════════════
     // Fullscreen video overlay
     // ═══════════════════════════════════════════════════════════════════
-    if (customView != null) {
+    val fullscreenView = customView
+    if (fullscreenView != null) {
         FullscreenVideoOverlay(
-            customView = customView,
+            customView = fullscreenView,
             onExitFullscreen = { browserViewModel.exitFullscreen() }
         )
         // Don't render the rest of the UI while in fullscreen
@@ -223,6 +230,7 @@ fun MainScreen(
     // ═══════════════════════════════════════════════════════════════════
     if (uiState.showTabOverview) {
         TabOverviewScreen(
+            viewModel = hiltViewModel(),
             onTabSelected = {
                 mainViewModel.onEvent(MainEvent.SelectTab(it))
                 mainViewModel.onEvent(MainEvent.DismissAll)
@@ -410,8 +418,8 @@ fun MainScreen(
     if (uiState.showAddTabSheet) {
         AddTabSheet(
             viewModel = hiltViewModel(),
-            onTabCreated = { url, name ->
-                mainViewModel.onEvent(MainEvent.AddTab(url, name))
+            onTabCreated = { params ->
+                mainViewModel.onEvent(MainEvent.AddTab(params.url, params.customName))
                 mainViewModel.onEvent(MainEvent.DismissAll)
             },
             onDismiss = { mainViewModel.onEvent(MainEvent.DismissAll) }
@@ -420,8 +428,11 @@ fun MainScreen(
 
     if (uiState.showRecentlyClosed) {
         RecentlyClosedSheet(
+            closedTabs = emptyList(),
             onRestore = { mainViewModel.onEvent(MainEvent.RestoreTab(it)) },
-            onDismiss = { mainViewModel.onEvent(MainEvent.DismissAll) }
+            onDismiss = { mainViewModel.onEvent(MainEvent.DismissAll) },
+            onDismissItem = {},
+            onClearAll = {}
         )
     }
 }
@@ -970,213 +981,4 @@ private fun MenuDialogItem(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Placeholder composables for sheets/overlays.
-// These will be replaced by real implementations in dedicated files.
-// ─────────────────────────────────────────────────────────────────────────────
 
-// region Placeholder composables
-
-/**
- * Workspace switcher bottom sheet.
- * TODO: Move to ui/workspace/WorkspaceSwitcherSheet.kt
- */
-@Composable
-private fun WorkspaceSwitcherSheet(
-    viewModel: WorkspaceViewModel,
-    onDismiss: () -> Unit,
-) {
-    Text("WorkspaceSwitcherSheet")
-}
-
-/**
- * Add-tab bottom sheet.
- * TODO: Move to ui/addtab/AddTabSheet.kt
- */
-@Composable
-private fun AddTabSheet(
-    viewModel: AddTabViewModel,
-    onTabCreated: (String, String?) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    Text("AddTabSheet")
-}
-
-/**
- * Recently-closed tabs bottom sheet.
- * TODO: Move to ui/main/RecentlyClosedSheet.kt
- */
-@Composable
-private fun RecentlyClosedSheet(
-    onRestore: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    Text("RecentlyClosedSheet")
-}
-
-/**
- * Quick-switcher overlay dialog.
- * TODO: Move to ui/main/QuickSwitcherOverlay.kt
- */
-@Composable
-private fun QuickSwitcherOverlay(
-    query: String,
-    tabs: List<Tab>,
-    activeTabId: String?,
-    onQueryChanged: (String) -> Unit,
-    onTabSelected: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
-        )
-    ) {
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            tonalElevation = 8.dp,
-            modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .fillMaxHeight(0.7f)
-                .padding(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "Switch Tabs",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
-                var searchQuery by remember { mutableStateOf(query) }
-                LaunchedEffect(query) { searchQuery = query }
-
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    BasicTextField(
-                        value = searchQuery,
-                        onValueChange = {
-                            searchQuery = it
-                            onQueryChanged(it)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(
-                            color = MaterialTheme.colorScheme.onSurface
-                        ),
-                        singleLine = true
-                    )
-                }
-
-                Spacer(Modifier.height(12.dp))
-
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    items(tabs, key = { it.id }) { tab ->
-                        val isActive = tab.id == activeTabId
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isActive) {
-                                MaterialTheme.colorScheme.primaryContainer
-                            } else {
-                                Color.Transparent
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onTabSelected(tab.id) }
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 12.dp)
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = tab.title.ifBlank {
-                                            UrlNormalizer.getDomainFromUrl(tab.url)
-                                        },
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Text(
-                                        text = tab.url,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                                if (isActive) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = "Current tab",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * Full-screen tab overview grid.
- * TODO: Move to ui/overview/TabOverviewScreen.kt
- */
-@Composable
-private fun TabOverviewScreen(
-    onTabSelected: (String) -> Unit,
-    onDismiss: () -> Unit,
-    onAddTab: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(16.dp)
-    ) {
-        Column {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Tab Overview",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-                TextButton(onClick = onDismiss) {
-                    Text("Done")
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = "Tab grid will be displayed here.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-// endregion

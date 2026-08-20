@@ -1,6 +1,7 @@
 package com.pratham.webhub.ui.workspace
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +20,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Briefcase
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
@@ -45,7 +46,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -231,6 +232,7 @@ private fun CreateWorkspaceRow(
 
 // ── Workspace list item ────────────────────────────────────────────────────
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun WorkspaceListItem(
     workspace: Workspace,
@@ -269,7 +271,7 @@ private fun WorkspaceListItem(
                         .fillMaxWidth()
                         .focusRequester(renameFocus),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = onRenameConfirm)
+                    keyboardActions = KeyboardActions(onDone = { onRenameConfirm() })
                 )
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -391,7 +393,7 @@ private fun WorkspaceIcon(
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
-                imageVector = Icons.Default.Briefcase,
+                imageVector = Icons.Default.Folder,
                 contentDescription = null,
                 tint = fgColor,
                 modifier = Modifier.size(20.dp)
@@ -442,7 +444,7 @@ private fun EmptyWorkspaceState() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                imageVector = Icons.Default.Briefcase,
+                imageVector = Icons.Default.Folder,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
                 modifier = Modifier.size(48.dp)

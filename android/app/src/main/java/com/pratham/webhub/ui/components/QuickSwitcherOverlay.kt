@@ -43,9 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextOverflow
@@ -112,10 +110,7 @@ fun QuickSwitcherOverlay(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.6f * overlayAlpha))
-            .clickable(
-                indication = null, // no ripple on the background
-                onClick = onDismiss
-            )
+            .clickable { onDismiss() }
     ) {
         // Centered search card
         Card(
@@ -127,14 +122,14 @@ fun QuickSwitcherOverlay(
                     when {
                         // Escape to dismiss
                         event.type == KeyEventType.KeyDown &&
-                                event.key == Key.Escape -> {
+                                event.nativeKeyEvent.keyCode == android.view.KeyEvent.KEYCODE_ESCAPE -> {
                             onDismiss()
                             true
                         }
 
                         // Arrow down
                         event.type == KeyEventType.KeyDown &&
-                                event.key == Key.Down -> {
+                                event.nativeKeyEvent.keyCode == android.view.KeyEvent.KEYCODE_DPAD_DOWN -> {
                             if (highlightedIndex < tabs.size - 1) {
                                 highlightedIndex++
                             }
@@ -143,7 +138,7 @@ fun QuickSwitcherOverlay(
 
                         // Arrow up
                         event.type == KeyEventType.KeyDown &&
-                                event.key == Key.Up -> {
+                                event.key == Key.DirectionUp -> {
                             if (highlightedIndex > 0) {
                                 highlightedIndex--
                             }
@@ -152,7 +147,7 @@ fun QuickSwitcherOverlay(
 
                         // Enter to select
                         event.type == KeyEventType.KeyDown &&
-                                event.key == Key.Enter -> {
+                                event.nativeKeyEvent.keyCode == android.view.KeyEvent.KEYCODE_ENTER -> {
                             if (tabs.isNotEmpty() && highlightedIndex in tabs.indices) {
                                 onTabSelected(tabs[highlightedIndex].id)
                             }

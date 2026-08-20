@@ -3,7 +3,6 @@ package com.pratham.webhub.webview
 import android.annotation.SuppressLint
 import android.content.Context
 import android.webkit.GeolocationPermissions
-import android.webkit.MixedContentMode
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView

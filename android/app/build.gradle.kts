@@ -21,6 +21,20 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Determine release signing availability at configuration time
+    val hasReleaseSigning = System.getenv("RELEASE_STORE_FILE") != null
+
+    signingConfigs {
+        create("release") {
+            if (hasReleaseSigning) {
+                storeFile = file(System.getenv("RELEASE_STORE_FILE")!!)
+                storePassword = System.getenv("RELEASE_STORE_PASSWORD") ?: ""
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: ""
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD") ?: ""
+            }
+        }
+    }
+
     buildTypes {
         debug {
             isMinifyEnabled = false
@@ -36,28 +50,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 file("proguard-rules.pro")
             )
-            signingConfig = signingConfigs.getByName("release")
-            ndk {
-            // Release ABI filter
-            abiFilters += listOf("arm64-v8a")
-            }
-        }
-    }
-
-    signingConfigs {
-        create("release") {
-            val storeFilePath = System.getenv("RELEASE_STORE_FILE")
-            if (storeFilePath != null) {
-                storeFile = file(storeFilePath)
-                storePassword = System.getenv("RELEASE_STORE_PASSWORD") ?: ""
-                keyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: ""
-                keyPassword = System.getenv("RELEASE_KEY_PASSWORD") ?: ""
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.getByName("release")
             } else {
-                // Fallback to debug signing when no release keystore is configured.
-                storeFile = file("debug.keystore")
-                storePassword = "android"
-                keyAlias = "androiddebugkey"
-                keyPassword = "android"
+                null
+            }
+            ndk {
+                abiFilters += listOf("arm64-v8a")
             }
         }
     }
@@ -80,13 +79,11 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
-        // Use standard AAB packaging
         jniLibs {
             useLegacyPackaging = false
         }
     }
-
-
+}
 
 dependencies {
     // --- Core AndroidX ---
@@ -97,7 +94,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
 
     // --- Jetpack Compose BOM ---
-    val composeBom = platform("androidx.compose:compose-bom:2025.02.00")
+    val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
@@ -118,7 +115,6 @@ dependencies {
     // --- Hilt (Dependency Injection) ---
     implementation("com.google.dagger:hilt-android:2.53.1")
     ksp("com.google.dagger:hilt-android-compiler:2.53.1")
-    // Hilt Navigation Compose
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // --- Room (Database) ---
@@ -129,8 +125,6 @@ dependencies {
 
     // --- DataStore (Preferences) ---
     implementation("androidx.datastore:datastore-preferences:1.1.2")
-
-    // --- DataStore Core (for Preferences DataStore) ---
     implementation("androidx.datastore:datastore-core:1.1.2")
 
     // --- Biometric ---
@@ -149,8 +143,6 @@ dependencies {
 
     // --- Coroutines ---
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
-
-
 
     // --- Testing ---
     testImplementation("junit:junit:4.13.2")

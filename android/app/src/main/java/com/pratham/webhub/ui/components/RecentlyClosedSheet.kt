@@ -335,11 +335,11 @@ private fun formatRelativeTime(timestampMillis: Long): String {
     if (minutes < 60) return "${minutes} min ago"
 
     val hours = minutes / 60
-    if (hours < 24) return "${hours} hour${if (hours != 1) "s" else ""} ago"
+    if (hours < 24) return "${hours} hour${if (hours != 1L) "s" else ""} ago"
 
     val days = hours / 24
-    if (days < 7) return "${days} day${if (days != 1) "s" else ""} ago"
+    if (days < 7) return "${days} day${if (days != 1L) "s" else ""} ago"
 
     val weeks = days / 7
-    return "${weeks} week${if (weeks != 1) "s" else ""} ago"
+    return "${weeks} week${if (weeks != 1L) "s" else ""} ago"
 }

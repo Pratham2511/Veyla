@@ -28,8 +28,6 @@ data class TabEntity(
     val faviconUrl: String? = null,
     val customName: String? = null,
     val customIconUri: String? = null,
-    // Retained for schema compatibility; not used as an active feature.
-    val isIncognito: Boolean = false,
     val isJsEnabled: Boolean = true,
     val isAdBlockEnabled: Boolean = true,
     val cssOverride: String? = null,

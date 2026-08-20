@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.os.Bundle
 import android.util.Log
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
@@ -67,7 +68,7 @@ class WebViewManager @Inject constructor(
         if (webView != null) {
             webView.stopLoading()
             webView.loadUrl("about:blank")
-            webView.webViewClient = null
+            webView.webViewClient = object : WebViewClient() {}
             webView.webChromeClient = null
             webView.destroy()
             Log.d(TAG, "Destroyed WebView for tab: $tabId")
@@ -99,10 +100,10 @@ class WebViewManager @Inject constructor(
         val webView = tabWebViews[tabId] ?: return null
         return try {
             val state = Bundle()
-            val saved = webView.saveState(state)
-            if (saved != null) {
-                saved.putInt("saved_scroll_y", webView.scrollY)
-                saved
+            val result = webView.saveState(state)
+            if (result != null) {
+                state.putInt("saved_scroll_y", webView.scrollY)
+                state
             } else {
                 null
             }
@@ -151,7 +152,7 @@ class WebViewManager @Inject constructor(
         // Destroy the WebView to free memory
         webView.stopLoading()
         webView.loadUrl("about:blank")
-        webView.webViewClient = null
+        webView.webViewClient = object : WebViewClient() {}
         webView.webChromeClient = null
         webView.destroy()
         tabWebViews.remove(tabId)
