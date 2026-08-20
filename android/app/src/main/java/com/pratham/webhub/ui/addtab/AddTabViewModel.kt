@@ -19,7 +19,6 @@ data class AddTabUiState(
     val urlResult: UrlResult? = null,
     val customName: String = "",
     val selectedWorkspaceId: String? = null,
-    val isIncognito: Boolean = false,
     val workspaces: List<Workspace> = emptyList(),
     val settings: AppSettings = AppSettings(),
     val isValid: Boolean = false
@@ -36,23 +35,20 @@ class AddTabViewModel @Inject constructor(
     private val _urlInput = MutableStateFlow("")
     private val _customName = MutableStateFlow("")
     private val _selectedWorkspaceId = MutableStateFlow<String?>(null)
-    private val _isIncognito = MutableStateFlow(false)
 
     // Nested combines to handle more than 5 flows
     private val userInputsFlow = combine(
         _urlInput,
         _customName,
-        _selectedWorkspaceId,
-        _isIncognito
-    ) { urlInput, customName, selectedWsId, incognito ->
-        UserInputs(urlInput, customName, selectedWsId, incognito)
+        _selectedWorkspaceId
+    ) { urlInput, customName, selectedWsId ->
+        UserInputs(urlInput, customName, selectedWsId)
     }
 
     private data class UserInputs(
         val urlInput: String,
         val customName: String,
-        val selectedWorkspaceId: String?,
-        val isIncognito: Boolean
+        val selectedWorkspaceId: String?
     )
 
     val state: StateFlow<AddTabUiState> = combine(
@@ -68,7 +64,6 @@ class AddTabViewModel @Inject constructor(
             urlResult = urlResult,
             customName = inputs.customName,
             selectedWorkspaceId = effectiveWorkspaceId,
-            isIncognito = inputs.isIncognito,
             workspaces = workspaces,
             settings = settings,
             isValid = urlResult.url.isNotBlank() && urlResult.url != "about:blank"
@@ -93,15 +88,10 @@ class AddTabViewModel @Inject constructor(
         _selectedWorkspaceId.value = workspaceId
     }
 
-    fun setIncognito(enabled: Boolean) {
-        _isIncognito.value = enabled
-    }
-
     /** Clear all input fields (e.g. after successful tab creation). */
     fun clear() {
         _urlInput.value = ""
         _customName.value = ""
-        _isIncognito.value = false
         _selectedWorkspaceId.value = null
     }
 }

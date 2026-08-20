@@ -21,9 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Hotel
-import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -53,7 +51,7 @@ import com.pratham.webhub.util.UrlNormalizer
 /**
  * A horizontally scrollable strip of tab chips rendered at the bottom
  * of the browser screen. Each chip shows the tab's favicon, a truncated
- * title, a close button, and visual indicators for incognito / hibernated
+ * title, a close button, and visual indicators for hibernated
  * tabs. An "add tab" FAB is pinned at the trailing edge.
  *
  * @param tabs           The list of tabs to display.
@@ -168,7 +166,6 @@ private fun TabChip(
     val cardContainerColor by animateColorAsState(
         targetValue = when {
             isActive -> MaterialTheme.colorScheme.primaryContainer
-            tab.isIncognito -> if (isDarkTheme) Color(0xFF2A2A44) else Color(0xFFE8E0F0)
             else -> MaterialTheme.colorScheme.surfaceVariant
         },
         label = "tab_chip_bg"
@@ -176,7 +173,6 @@ private fun TabChip(
 
     val cardContentColor = when {
         isActive -> MaterialTheme.colorScheme.onPrimaryContainer
-        tab.isIncognito -> if (isDarkTheme) Color(0xFFD0D0E0) else Color(0xFF3A3A5C)
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
@@ -203,22 +199,6 @@ private fun TabChip(
                 .fillMaxHeight()
                 .padding(start = 6.dp, end = 2.dp)
         ) {
-            // ── Incognito indicator badge ─────────────────────────────
-            if (tab.isIncognito) {
-                Badge(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary,
-                    modifier = Modifier.size(18.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DarkMode,
-                        contentDescription = "Incognito",
-                        modifier = Modifier.size(10.dp)
-                    )
-                }
-                Spacer4()
-            }
-
             // ── Hibernated indicator ──────────────────────────────────
             if (tab.isHibernated) {
                 Icon(
@@ -228,7 +208,7 @@ private fun TabChip(
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer4()
-            } else if (!tab.isIncognito) {
+            } else {
                 // ── Favicon ──────────────────────────────────────────
                 val faviconUrl = tab.faviconUrl
                     ?: if (tab.url.isNotBlank() && !tab.url.startsWith("about:")) {

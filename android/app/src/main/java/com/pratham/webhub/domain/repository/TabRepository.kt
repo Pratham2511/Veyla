@@ -14,8 +14,7 @@ interface TabRepository {
         url: String,
         title: String? = null,
         faviconUrl: String? = null,
-        customName: String? = null,
-        isIncognito: Boolean = false
+        customName: String? = null
     ): String
 
     suspend fun closeTab(tabId: String)

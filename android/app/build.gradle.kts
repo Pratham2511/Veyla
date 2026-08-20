@@ -38,20 +38,27 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
             ndk {
-                // Only ship arm64-v8a for release builds
-                abiFilters += listOf("arm64-v8a")
+            // Release ABI filter
+            abiFilters += listOf("arm64-v8a")
             }
         }
     }
 
     signingConfigs {
         create("release") {
-            // Configure these via environment variables or local.properties
-            // RELEASE_STORE_FILE, RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS, RELEASE_KEY_PASSWORD
-            storeFile = file(System.getenv("RELEASE_STORE_FILE") ?: "release.keystore")
-            storePassword = System.getenv("RELEASE_STORE_PASSWORD") ?: ""
-            keyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: ""
-            keyPassword = System.getenv("RELEASE_KEY_PASSWORD") ?: ""
+            val storeFilePath = System.getenv("RELEASE_STORE_FILE")
+            if (storeFilePath != null) {
+                storeFile = file(storeFilePath)
+                storePassword = System.getenv("RELEASE_STORE_PASSWORD") ?: ""
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: ""
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD") ?: ""
+            } else {
+                // Fallback to debug signing when no release keystore is configured.
+                storeFile = file("debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
         }
     }
 
@@ -79,22 +86,9 @@ android {
         }
     }
 
-    // AAB output for release
-    applicationVariants.all {
-        val variant = this
-        if (variant.name == "release") {
-            variant.outputs.all {
-                val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
-                output.outputFileName = "webhub-${variant.versionName}.aab"
-            }
-        }
-    }
-}
+
 
 dependencies {
-    // --- Kotlin Standard Library ---
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
-
     // --- Core AndroidX ---
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.activity:activity-compose:1.9.3")
@@ -128,7 +122,7 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // --- Room (Database) ---
-    val roomVersion = "2.7.0-alpha12"
+    val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
@@ -136,9 +130,8 @@ dependencies {
     // --- DataStore (Preferences) ---
     implementation("androidx.datastore:datastore-preferences:1.1.2")
 
-    // --- Proto DataStore ---
+    // --- DataStore Core (for Preferences DataStore) ---
     implementation("androidx.datastore:datastore-core:1.1.2")
-    implementation("com.google.protobuf:protobuf-javalite:4.28.2")
 
     // --- Biometric ---
     implementation("androidx.biometric:biometric:1.1.0")
@@ -157,8 +150,7 @@ dependencies {
     // --- Coroutines ---
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
-    // --- Serialization ---
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
 
     // --- Testing ---
     testImplementation("junit:junit:4.13.2")

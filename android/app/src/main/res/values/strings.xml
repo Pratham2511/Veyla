@@ -17,7 +17,6 @@
     <string name="tabs_duplicate">Duplicate</string>
     <string name="tabs_move_to_workspace">Move to workspace</string>
     <string name="tabs_private_tab">Private tab</string>
-    <string name="tabs_incognito_title">Incognito tab</string>
     <string name="tabs_recently_closed">Recently closed</string>
     <string name="tabs_restore">Restore tab</string>
     <string name="tabs_clear_history">Clear closed tab history</string>

@@ -75,7 +75,6 @@ import com.pratham.webhub.ui.theme.UrlBarBackgroundLight
  * @param sslState       The current SSL certificate state.
  * @param canGoBack      Whether the WebView can navigate back.
  * @param canGoForward   Whether the WebView can navigate forward.
- * @param isIncognito    Whether the active tab is in incognito mode.
  * @param onUrlSubmit    Called when the user submits a URL or search query.
  * @param onBack         Called to navigate back in WebView history.
  * @param onForward      Called to navigate forward in WebView history.
@@ -94,7 +93,6 @@ fun Omnibox(
     sslState: SslState,
     canGoBack: Boolean,
     canGoForward: Boolean,
-    isIncognito: Boolean,
     onUrlSubmit: (String) -> Unit,
     onBack: () -> Unit,
     onForward: () -> Unit,
@@ -159,25 +157,16 @@ fun Omnibox(
         else -> url
     }
 
-    // Bar background color: incognito tint, or standard URL bar color
+    // Bar background color
     val barBackgroundColor by animateColorAsState(
         targetValue = when {
-            isIncognito -> if (isDarkTheme) {
-                Color(0xFF1A1A2E)
-            } else {
-                Color(0xFF2D2D44)
-            }
             isDarkTheme -> UrlBarBackgroundDark
             else -> UrlBarBackgroundLight
         },
         label = "omnibox_bg"
     )
 
-    val contentColor = if (isIncognito) {
-        Color(0xFFE0E0E0)
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
+    val contentColor = MaterialTheme.colorScheme.onSurface
 
     // SSL icon & color
     val sslIcon: ImageVector
@@ -204,8 +193,8 @@ fun Omnibox(
         Surface(
             color = barBackgroundColor,
             shape = RoundedCornerShape(24.dp),
-            tonalElevation = if (isIncognito) 2.dp else 0.dp,
-            shadowElevation = if (isIncognito) 4.dp else 2.dp,
+            tonalElevation = 0.dp,
+            shadowElevation = 2.dp,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -387,11 +376,7 @@ fun Omnibox(
                     .fillMaxWidth()
                     .height(3.dp)
                     .padding(horizontal = 16.dp),
-                color = if (isIncognito) {
-                    Color(0xFF7C7CFF)
-                } else {
-                    MaterialTheme.colorScheme.primary
-                },
+                color = MaterialTheme.colorScheme.primary,
                 trackColor = Color.Transparent,
                 strokeCap = StrokeCap.Round
             )

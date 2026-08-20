@@ -34,7 +34,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.History
@@ -94,7 +93,6 @@ import com.pratham.webhub.ui.browser.BrowserUiState
 import com.pratham.webhub.ui.browser.BrowserViewModel
 import com.pratham.webhub.ui.components.Omnibox
 import com.pratham.webhub.ui.components.TabStrip
-import com.pratham.webhub.ui.theme.IncognitoTint
 import com.pratham.webhub.ui.workspace.WorkspaceViewModel
 import com.pratham.webhub.util.UrlNormalizer
 import kotlinx.coroutines.launch
@@ -163,9 +161,6 @@ fun MainScreen(
 
     // ── Menu expansion state ────────────────────────────────────────
     var showOverflowMenu by remember { mutableStateOf(false) }
-
-    // ── Determine incognito tint ────────────────────────────────────
-    val isIncognitoActive = activeTab?.isIncognito == true
 
     // ═══════════════════════════════════════════════════════════════════
     // Back-press handling: sheets > WebView.goBack > close tab
@@ -247,7 +242,6 @@ fun MainScreen(
             WorkspaceDrawerContent(
                 workspaces = uiState.workspaces,
                 activeWorkspaceId = uiState.activeWorkspaceId,
-                isIncognito = isIncognitoActive,
                 onWorkspaceSelected = { wsId ->
                     mainViewModel.onEvent(MainEvent.SwitchWorkspace(wsId))
                     coroutineScope.launch { drawerState.close() }
@@ -267,17 +261,9 @@ fun MainScreen(
             )
         }
     ) {
-        // Incognito tint overlay on the background
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .then(
-                    if (isIncognitoActive) {
-                        Modifier.background(IncognitoTint.copy(alpha = 0.04f))
-                    } else {
-                        Modifier
-                    }
-                )
         ) {
             Scaffold(
                 modifier = Modifier
@@ -377,10 +363,6 @@ fun MainScreen(
                         )
                     }
 
-                    // Incognito mode watermark
-                    if (isIncognitoActive) {
-                        IncognitoWatermark()
-                    }
                 }
             }
         }
@@ -399,10 +381,6 @@ fun MainScreen(
             onNewTab = {
                 showOverflowMenu = false
                 mainViewModel.onEvent(MainEvent.ShowAddTab)
-            },
-            onNewIncognitoTab = {
-                showOverflowMenu = false
-                mainViewModel.onEvent(MainEvent.AddTab("about:blank", null))
             },
             onBookmarks = {
                 showOverflowMenu = false
@@ -466,8 +444,6 @@ private fun MainTopBar(
     onMenuClick: () -> Unit,
     onDrawerClick: () -> Unit,
 ) {
-    val isIncognito = uiState.activeTab?.isIncognito == true
-
     Column {
         TopAppBar(
             title = {},
@@ -524,7 +500,6 @@ private fun MainTopBar(
             sslState = browserState.sslState,
             canGoBack = browserState.canGoBack,
             canGoForward = browserState.canGoForward,
-            isIncognito = isIncognito,
             onUrlSubmit = onUrlSubmit,
             onBack = onBack,
             onForward = onForward,
@@ -545,18 +520,13 @@ private fun MainTopBar(
 private fun WorkspaceDrawerContent(
     workspaces: List<Workspace>,
     activeWorkspaceId: String?,
-    isIncognito: Boolean,
     onWorkspaceSelected: (String) -> Unit,
     onNavigateToBookmarks: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToHistory: () -> Unit,
 ) {
     ModalDrawerSheet(
-        drawerContainerColor = if (isIncognito) {
-            MaterialTheme.colorScheme.surface.copy(red = 0.08f, blue = 0.08f)
-        } else {
-            MaterialTheme.colorScheme.surface
-        }
+        drawerContainerColor = MaterialTheme.colorScheme.surface
     ) {
         // Header
         Column(
@@ -903,44 +873,6 @@ private fun HibernatedTabPlaceholder(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Incognito watermark overlay
-// ─────────────────────────────────────────────────────────────────────────────
-
-@Composable
-private fun IncognitoWatermark() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .alpha(0.04f),
-        contentAlignment = Alignment.BottomEnd
-    ) {
-        Column(
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = Icons.Default.DarkMode,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier
-                    .size(120.dp)
-                    .align(Alignment.End)
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "INCOGNITO",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                letterSpacing = 8.sp
-            )
-        }
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Overflow menu dialog
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -949,7 +881,6 @@ private fun OverflowMenuDialog(
     onDismiss: () -> Unit,
     onTabOverview: () -> Unit,
     onNewTab: () -> Unit,
-    onNewIncognitoTab: () -> Unit,
     onBookmarks: () -> Unit,
     onHistory: () -> Unit,
     onSettings: () -> Unit,
@@ -982,11 +913,6 @@ private fun OverflowMenuDialog(
                     label = "New tab",
                     icon = Icons.Default.Add,
                     onClick = onNewTab
-                )
-                MenuDialogItem(
-                    label = "New incognito tab",
-                    icon = Icons.Default.DarkMode,
-                    onClick = onNewIncognitoTab
                 )
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
@@ -1177,15 +1103,6 @@ private fun QuickSwitcherOverlay(
                                     .fillMaxWidth()
                                     .padding(horizontal = 12.dp, vertical = 12.dp)
                             ) {
-                                if (tab.isIncognito) {
-                                    Icon(
-                                        imageVector = Icons.Default.DarkMode,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.tertiary,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(Modifier.width(10.dp))
-                                }
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = tab.title.ifBlank {

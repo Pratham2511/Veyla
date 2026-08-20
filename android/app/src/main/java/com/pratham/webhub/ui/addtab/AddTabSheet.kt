@@ -15,7 +15,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -30,7 +29,6 @@ import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -60,8 +58,7 @@ data class TabCreationParams(
     val url: String,
     val title: String?,
     val customName: String?,
-    val workspaceId: String?,
-    val isIncognito: Boolean
+    val workspaceId: String?
 )
 
 /**
@@ -179,12 +176,6 @@ fun AddTabSheet(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Incognito toggle ─────────────────────────────────────────
-            IncognitoRow(
-                isIncognito = state.isIncognito,
-                onIncognitoChanged = viewModel::setIncognito
-            )
-
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
             // ── Validation error ─────────────────────────────────────────
@@ -206,8 +197,7 @@ fun AddTabSheet(
                             url = result.url,
                             title = if (result.isSearch) result.searchTerm else null,
                             customName = state.customName.ifBlank { null },
-                            workspaceId = state.selectedWorkspaceId,
-                            isIncognito = state.isIncognito
+                            workspaceId = state.selectedWorkspaceId
                         )
                     )
                     viewModel.clear()
@@ -374,41 +364,4 @@ private fun WorkspaceSelector(
     }
 }
 
-// ── Incognito toggle row ─────────────────────────────────────────────────────
 
-@Composable
-private fun IncognitoRow(
-    isIncognito: Boolean,
-    onIncognitoChanged: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Icon(
-            imageVector = Icons.Default.DarkMode,
-            contentDescription = null,
-            tint = if (isIncognito) MaterialTheme.colorScheme.tertiary
-                   else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Incognito mode",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                text = "Browsing data won\'t be saved",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Switch(
-            checked = isIncognito,
-            onCheckedChange = onIncognitoChanged
-        )
-    }
-}

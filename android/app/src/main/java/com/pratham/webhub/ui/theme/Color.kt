@@ -85,9 +85,6 @@ val TabBarBackgroundDark = Color(0xFF252529)
 val UrlBarBackgroundLight = Color(0xFFF0F0F8)
 val UrlBarBackgroundDark = Color(0xFF2A2A32)
 
-/** Tint used for incognito/private mode indicators. */
-val IncognitoTint = Color(0xFF1C1B1F)
-
 /** Green tint indicating a valid SSL certificate. */
 val SslValid = Color(0xFF22C55E)
 

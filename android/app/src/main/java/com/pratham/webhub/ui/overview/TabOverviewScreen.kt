@@ -24,11 +24,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -256,7 +254,6 @@ private fun TabCard(
     val containerColor by animateColorAsState(
         targetValue = when {
             isHibernated -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            tab.isIncognito -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
             isActive -> MaterialTheme.colorScheme.primaryContainer
             else -> MaterialTheme.colorScheme.surfaceContainerLow
         },
@@ -353,7 +350,7 @@ private fun TabCard(
                     .padding(start = 10.dp, end = 8.dp, top = 8.dp, bottom = 4.dp)
             ) {
                 // Favicon
-                if (!isHibernated && !tab.isIncognito && faviconUrl != null) {
+                if (!isHibernated && faviconUrl != null) {
                     AsyncImage(
                         model = faviconUrl,
                         contentDescription = null,
@@ -361,19 +358,6 @@ private fun TabCard(
                             .size(16.dp)
                             .clip(RoundedCornerShape(3.dp))
                     )
-                    Spacer(Modifier.width(6.dp))
-                } else if (tab.isIncognito) {
-                    Badge(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary,
-                        modifier = Modifier.size(16.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DarkMode,
-                            contentDescription = "Incognito",
-                            modifier = Modifier.size(8.dp)
-                        )
-                    }
                     Spacer(Modifier.width(6.dp))
                 } else {
                     // Letter fallback

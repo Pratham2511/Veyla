@@ -377,15 +377,6 @@ private fun QuickSwitcherTabItem(
                 )
             }
 
-            // Incognito indicator
-            if (tab.isIncognito) {
-                Icon(
-                    imageVector = Icons.Default.Close, // placeholder; would use Incognito icon
-                    contentDescription = "Incognito",
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
-            }
         }
     }
 }

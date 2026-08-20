@@ -23,7 +23,6 @@ import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,7 +60,6 @@ import com.pratham.webhub.domain.model.Workspace
  * @param tab             The tab to configure.
  * @param onUpdateTab     Called with the updated [Tab] when a setting changes.
  * @param onHibernate     Called with the tab ID to hibernate the tab.
- * @param onIncognitoToggle Called with the tab ID to toggle incognito mode.
  * @param onMoveToWorkspace Called with (tabId, workspaceId) to move the tab.
  * @param onBookmark      Called with (url, title, faviconUrl) to bookmark,
  *                        or (url, "", null) to un-bookmark.
@@ -75,7 +73,6 @@ fun TabSettingsSheet(
     tab: Tab,
     onUpdateTab: (Tab) -> Unit,
     onHibernate: (String) -> Unit,
-    onIncognitoToggle: (String) -> Unit,
     onMoveToWorkspace: (String, String) -> Unit,
     onBookmark: (String, String, String?) -> Unit,
     workspaces: List<Workspace>,
@@ -159,14 +156,6 @@ fun TabSettingsSheet(
                 description = "Block advertisements on this tab",
                 checked = tab.isAdBlockEnabled,
                 onCheckedChange = { onUpdateTab(tab.copy(isAdBlockEnabled = it)) }
-            )
-
-            SettingsToggleRow(
-                icon = Icons.Default.VisibilityOff,
-                label = "Incognito",
-                description = "Browse without saving history",
-                checked = tab.isIncognito,
-                onCheckedChange = { onIncognitoToggle(tab.id) }
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))

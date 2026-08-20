@@ -20,7 +20,6 @@ class WebViewFactory @Inject constructor(
     data class TabWebViewSettings(
         val isJsEnabled: Boolean = true,
         val isAdBlockEnabled: Boolean = true,
-        val isIncognito: Boolean = false,
         val cssOverride: String? = null,
         val userScript: String? = null
     )
@@ -63,9 +62,8 @@ class WebViewFactory @Inject constructor(
         // Mixed content mode - never allow
         webSettings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
 
-        // Geolocation permissions
-        webSettings.setGeolocationEnabled(true)
-        webSettings.setGeolocationDatabasePath(context.filesDir.absolutePath)
+        // Geolocation disabled until a proper permission flow is implemented
+        webSettings.setGeolocationEnabled(false)
 
         // Modern web features
         webSettings.loadsImagesAutomatically = true
@@ -80,12 +78,6 @@ class WebViewFactory @Inject constructor(
         // User agent
         webSettings.userAgentString = webSettings.userAgentString + " WebHub/1.0"
 
-        // Incognito mode: clear cookies and disable caching
-        if (settings.isIncognito) {
-            webSettings.cacheMode = WebSettings.LOAD_NO_CACHE
-            webSettings.domStorageEnabled = false
-            webSettings.databaseEnabled = false
-        }
     }
 
     private fun configureClients(webView: WebView, tabId: String) {

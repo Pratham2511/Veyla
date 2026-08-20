@@ -12,7 +12,6 @@ class WebHubChromeClient(
     private val tabId: String,
     private val onProgressChanged: (tabId: String, progress: Int) -> Unit,
     private val onShowCustomView: (view: View, callback: WebChromeClient.CustomViewCallback) -> Unit,
-    private val onHideCustomView: () -> Unit,
     private val onPermissionRequest: (permissionRequest: PermissionRequest) -> Unit
 ) : WebChromeClient() {
 
@@ -26,8 +25,7 @@ class WebHubChromeClient(
 
     override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
         if (customView != null) {
-            // Already showing a custom view; hide the previous one first
-            onHideCustomView()
+            customViewCallback?.onCustomViewHidden()
         }
         if (view != null && callback != null) {
             customView = view
@@ -37,12 +35,12 @@ class WebHubChromeClient(
     }
 
     override fun onHideCustomView() {
-        if (customView != null) {
-            customViewCallback?.onCustomViewHidden()
-            customView = null
-            customViewCallback = null
-        }
-        onHideCustomView()
+        customViewCallback?.onCustomViewHidden()
+        customView = null
+        customViewCallback = null
+        // Do NOT call onHideCustomView() callback here — the caller
+        // (e.g. BrowserViewModel) manages the UI state separately.
+        // The full-screen view has been removed; the system handles the rest.
     }
 
     override fun onPermissionRequest(request: PermissionRequest?) {
@@ -77,4 +75,11 @@ class WebHubChromeClient(
     fun isCustomViewShowing(): Boolean = customView != null
 
     fun getCustomView(): View? = customView
+
+    /** Release the custom (fullscreen) view. Called by the ViewModel when exiting fullscreen. */
+    fun releaseCustomView() {
+        customViewCallback?.onCustomViewHidden()
+        customView = null
+        customViewCallback = null
+    }
 }

@@ -94,7 +94,6 @@ class BrowserViewModel @Inject constructor(
         val wvSettings = WebViewFactory.TabWebViewSettings(
             isJsEnabled = tab.isJsEnabled,
             isAdBlockEnabled = tab.isAdBlockEnabled,
-            isIncognito = tab.isIncognito,
             cssOverride = tab.cssOverride,
             userScript = tab.userScript
         )
@@ -131,7 +130,6 @@ class BrowserViewModel @Inject constructor(
             tabId = tabId,
             onProgressChanged = { _, progress -> onProgressChanged(progress) },
             onShowCustomView = { view, _ -> onShowCustomView(view) },
-            onHideCustomView = { onHideCustomView() },
             onPermissionRequest = { request -> handlePermissionRequest(request) }
         )
         webView.webChromeClient = chromeClient
@@ -220,7 +218,9 @@ class BrowserViewModel @Inject constructor(
     // ── Fullscreen video ──────────────────────────────────────────────────
 
     fun exitFullscreen() {
-        currentChromeClient?.onHideCustomView()
+        currentChromeClient?.releaseCustomView()
+        _customView.value = null
+        _state.update { it.copy(isFullscreen = false) }
     }
 
     // ── WebViewClient callbacks ───────────────────────────────────────────
@@ -292,17 +292,12 @@ class BrowserViewModel @Inject constructor(
     }
 
     private fun handlePermissionRequest(request: PermissionRequest) {
-        // Default policy: grant only geolocation
-        val granted = request.resources.filter { resource ->
-            resource == PermissionRequest.RESOURCE_VIDEO_CAPTURE ||
-                    resource == PermissionRequest.RESOURCE_AUDIO_CAPTURE ||
-                    resource == PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID
-        }
-        if (granted.isNotEmpty()) {
-            request.grant(granted.toTypedArray())
-        } else {
-            request.deny()
-        }
+        // Default-deny: WebHub does not automatically grant WebView permissions.
+        // A future implementation should:
+        // 1. Map WebView resources to Android runtime permissions
+        // 2. Launch an Android permission request dialog
+        // 3. Only grant after the user explicitly approves
+        request.deny()
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────

@@ -62,7 +62,6 @@ class SessionRepositoryImpl @Inject constructor(
             tabObj.put("title", tab.title)
             tabObj.put("faviconUrl", tab.faviconUrl ?: JSONObject.NULL)
             tabObj.put("customName", tab.customName ?: JSONObject.NULL)
-            tabObj.put("isIncognito", tab.isIncognito)
             tabObj.put("isJsEnabled", tab.isJsEnabled)
             tabObj.put("isAdBlockEnabled", tab.isAdBlockEnabled)
             tabObj.put("cssOverride", tab.cssOverride ?: JSONObject.NULL)
@@ -124,7 +123,6 @@ class SessionRepositoryImpl @Inject constructor(
                 title = tabObj.optString("title", ""),
                 faviconUrl = tabObj.opt("faviconUrl")?.takeIf { it != JSONObject.NULL }?.toString(),
                 customName = tabObj.opt("customName")?.takeIf { it != JSONObject.NULL }?.toString(),
-                isIncognito = tabObj.optBoolean("isIncognito", false),
                 isJsEnabled = tabObj.optBoolean("isJsEnabled", true),
                 isAdBlockEnabled = tabObj.optBoolean("isAdBlockEnabled", true),
                 cssOverride = tabObj.opt("cssOverride")?.takeIf { it != JSONObject.NULL }?.toString(),

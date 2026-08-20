@@ -30,6 +30,10 @@ class WebViewManager @Inject constructor(
 
     var maxActiveWebViews: Int = DEFAULT_MAX_ACTIVE_WEBVIEWS
 
+    /** The tab currently visible in the UI — never hibernate this. */
+    @Volatile
+    var protectedTabId: String? = null
+
     fun getOrCreateWebView(
         tabId: String,
         settings: WebViewFactory.TabWebViewSettings,
@@ -231,6 +235,7 @@ class WebViewManager @Inject constructor(
 
     private fun hibernateLeastRecentlyUsed() {
         val lruTabId = lastUsedTimes.entries
+            .filter { it.key != protectedTabId }
             .minByOrNull { it.value }?.key ?: return
         val webView = tabWebViews[lruTabId]
         if (webView != null) {
@@ -245,7 +250,9 @@ class WebViewManager @Inject constructor(
             .sortedByDescending { it.value }
             .map { it.key }
 
-        val toHibernate = sortedTabs.drop(keepCount)
+        val toHibernate = sortedTabs
+            .filter { it != protectedTabId }
+            .drop(keepCount)
         for (tabId in toHibernate) {
             val webView = tabWebViews[tabId]
             if (webView != null) {

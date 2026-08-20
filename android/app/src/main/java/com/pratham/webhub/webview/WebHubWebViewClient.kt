@@ -137,13 +137,30 @@ class WebHubWebViewClient(
                 true
             }
             "intent" -> {
+                // Only allow intents targeting known safe packages
                 try {
                     val intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    if (intent.resolveActivity(view.context.packageManager) != null) {
-                        view.context.startActivity(intent)
+                    val component = intent.component
+                    if (component != null) {
+                        val packageName = component.packageName
+                        // Whitelist of safe packages that can receive intents
+                        val safePackages = setOf(
+                            "com.google.android.apps.maps",
+                            "com.google.android.gm",
+                            "com.google.android.dialer",
+                            "com.android.vending",
+                            "com.android.settings"
+                        )
+                        if (packageName in safePackages) {
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            if (intent.resolveActivity(view.context.packageManager) != null) {
+                                view.context.startActivity(intent)
+                            }
+                        }
+                        Log.d(TAG, "intent: URL targeted $packageName — allowed: ${packageName in safePackages}")
                     } else {
-                        Log.w(TAG, "No activity found for intent: $url")
+                        // Non-component intents are not allowed from WebView
+                        Log.w(TAG, "Blocked intent: URL without explicit component")
                     }
                 } catch (e: Exception) {
                     Log.w(TAG, "Failed to handle intent: URL", e)
