@@ -10,7 +10,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 
-private const val TAG = "WebHubWebViewClient"
+private const val TAG = "VeylaWebViewClient"
 
 class WebHubWebViewClient(
     private val tabId: String,

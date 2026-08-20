@@ -76,7 +76,7 @@ val md_theme_dark_inverseOnSurface = Color(0xFF313034)
 val md_theme_dark_inversePrimary = Color(0xFF6366F1)
 // endregion
 
-// region Semantic Colors (WebHub-specific)
+// region Semantic Colors (Veyla-specific)
 /** Background color for the bottom tab bar. */
 val TabBarBackgroundLight = Color(0xFFFFFBFF)
 val TabBarBackgroundDark = Color(0xFF252529)

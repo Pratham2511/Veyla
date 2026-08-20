@@ -75,7 +75,7 @@ class WebViewFactory @Inject constructor(
         webSettings.setSupportZoom(false)
 
         // User agent
-        webSettings.userAgentString = webSettings.userAgentString + " WebHub/1.0"
+        webSettings.userAgentString = webSettings.userAgentString + " Veyla/1.0"
 
     }
 

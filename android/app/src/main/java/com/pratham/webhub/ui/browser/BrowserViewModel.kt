@@ -292,7 +292,7 @@ class BrowserViewModel @Inject constructor(
     }
 
     private fun handlePermissionRequest(request: PermissionRequest) {
-        // Default-deny: WebHub does not automatically grant WebView permissions.
+        // Default-deny: Veyla does not automatically grant WebView permissions.
         // A future implementation should:
         // 1. Map WebView resources to Android runtime permissions
         // 2. Launch an Android permission request dialog

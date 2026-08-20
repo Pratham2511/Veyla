@@ -21,7 +21,7 @@ import javax.inject.Singleton
 import kotlin.coroutines.resume
 
 /**
- * Manages biometric authentication for WebHub.
+ * Manages biometric authentication for Veyla.
  *
  * Provides device credential fallback and uses a crypto object to ensure
  * the authentication result is tied to a cryptographic operation.

@@ -7,7 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * WebHub Typography scale.
+ * Veyla Typography scale.
  * Based on Material 3 type scale using the system default font.
  */
 val WebHubTypography = Typography(

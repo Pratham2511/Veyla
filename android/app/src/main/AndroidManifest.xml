@@ -21,7 +21,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="Veyla"
         android:supportsRtl="true"
-        android:theme="@style/Theme.WebHub"
+        android:theme="@style/Theme.Veyla"
         android:usesCleartextTraffic="false"
         tools:targetApi="36">
 
@@ -62,7 +62,7 @@
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/webhub_widget_info" />
+                android:resource="@xml/veyla_widget_info" />
         </receiver>
 
     </application>

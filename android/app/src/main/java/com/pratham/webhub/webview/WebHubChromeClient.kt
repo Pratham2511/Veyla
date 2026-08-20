@@ -6,7 +6,7 @@ import android.webkit.ConsoleMessage
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 
-private const val TAG = "WebHubChromeClient"
+private const val TAG = "VeylaChromeClient"
 
 class WebHubChromeClient(
     private val tabId: String,

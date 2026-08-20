@@ -12,7 +12,7 @@ import com.pratham.webhub.ui.bookmarks.BookmarksScreen
 import com.pratham.webhub.ui.settings.SettingsScreen
 
 /**
- * Sealed class representing every top-level screen in WebHub.
+ * Sealed class representing every top-level screen in Veyla.
  */
 sealed class WebHubScreen(val route: String) {
 
@@ -43,7 +43,7 @@ fun currentRoute(navController: NavHostController): String? {
 }
 
 /**
- * The top-level NavHost for WebHub.
+ * The top-level NavHost for Veyla.
  */
 @Composable
 fun WebHubNavHost(

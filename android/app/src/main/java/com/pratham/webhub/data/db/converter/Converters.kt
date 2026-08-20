@@ -1,7 +1,7 @@
 package com.pratham.webhub.data.db.converter
 
 /**
- * Room TypeConverters for the WebHub database.
+ * Room TypeConverters for the Veyla database.
  *
  * All entity fields currently use primitive types (String, Int, Boolean, Long),
  * so no custom converters are required. The @TypeConverters annotation has been

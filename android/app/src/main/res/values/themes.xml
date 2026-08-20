@@ -4,7 +4,7 @@
     <!-- ============================================ -->
     <!-- Base Theme                                    -->
     <!-- ============================================ -->
-    <style name="Theme.WebHub" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.Veyla" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@color/md_theme_light_primary</item>
         <item name="android:navigationBarColor">@color/md_theme_light_background</item>
         <item name="android:windowLightStatusBar">true</item>
@@ -12,7 +12,7 @@
     </style>
 
     <!-- Splash screen variant (used before Compose takes over) -->
-    <style name="Theme.WebHub.Splash" parent="Theme.WebHub">
+    <style name="Theme.Veyla.Splash" parent="Theme.Veyla">
         <item name="android:windowBackground">@color/splash_background</item>
         <item name="android:statusBarColor">@color/splash_background</item>
         <item name="android:navigationBarColor">@color/splash_background</item>

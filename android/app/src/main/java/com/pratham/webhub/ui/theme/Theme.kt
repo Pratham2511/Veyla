@@ -80,7 +80,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 /**
- * Material 3 theme for WebHub.
+ * Material 3 theme for Veyla.
  *
  * @param darkTheme Whether to use the dark color scheme. Defaults to system setting.
  * @param dynamicColor Whether to use Material You dynamic colors (Android 12+). Defaults to true.
@@ -124,7 +124,7 @@ fun WebHubTheme(
 }
 
 /**
- * Rounded shape definitions for WebHub.
+ * Rounded shape definitions for Veyla.
  */
 val WebHubShapes = Shapes(
     extraSmall = RoundedCornerShape(4.dp),
