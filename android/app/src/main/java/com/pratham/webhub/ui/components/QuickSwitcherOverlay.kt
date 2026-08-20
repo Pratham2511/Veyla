@@ -138,7 +138,7 @@ fun QuickSwitcherOverlay(
 
                         // Arrow up
                         event.type == KeyEventType.KeyDown &&
-                                event.key == Key.DirectionUp -> {
+                                event.nativeKeyEvent.keyCode == android.view.KeyEvent.KEYCODE_DPAD_UP -> {
                             if (highlightedIndex > 0) {
                                 highlightedIndex--
                             }

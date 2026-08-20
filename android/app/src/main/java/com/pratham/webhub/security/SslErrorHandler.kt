@@ -1,7 +1,7 @@
 package com.pratham.webhub.security
 
+import android.net.http.SslError
 import android.util.Log
-import android.webkit.SslError
 import android.webkit.SslErrorHandler as AndroidSslErrorHandler
 
 /**
@@ -15,15 +15,27 @@ object SslErrorHandler {
 
     private const val TAG = "SslErrorHandler"
 
+    // SslError constant values (kept as ints for forward compat with API 36+)
+    private const val SSL_NOT_YET_VALIDATED = 0
+    private const val SSL_UNTRUSTED = 1
+    private const val SSL_EXPIRED = 2
+    private const val SSL_IDMISMATCH = 3
+    private const val SSL_DATE_INVALID = 4
+    private const val SSL_INVALID = 5
+
     /**
- * Handles an SSL error reported by the WebView.
- *
- * @param error         The [SslError] reported by the WebView client.
- * @param allowProceed When `true` the page will be loaded despite the error;
- *                    when `false` (default) the request is cancelled.
- */
-    fun handleSslError(error: SslError, allowProceed: Boolean = false) {
-        val handler = error.handler
+     * Handles an SSL error reported by the WebView.
+     *
+     * @param handler       The platform [AndroidSslErrorHandler] to proceed or cancel.
+     * @param error         The [SslError] reported by the WebView client.
+     * @param allowProceed When `true` the page will be loaded despite the error;
+     *                    when `false` (default) the request is cancelled.
+     */
+    fun handleSslError(
+        handler: AndroidSslErrorHandler,
+        error: SslError,
+        allowProceed: Boolean = false
+    ) {
         val url = error.url
         val primaryError = sslErrorToString(error.primaryError)
 
@@ -43,14 +55,15 @@ object SslErrorHandler {
     }
 
     /**
- * Converts an [SslError] error code to a human-readable string for logging.
- */
+     * Converts an SslError error code to a human-readable string for logging.
+     */
     fun sslErrorToString(error: Int): String = when (error) {
-        SslError.SSL_NOTYETVALIDATED -> "SSL_NOTYETVALIDATED"
-        SslError.SSL_UNTRUSTED -> "SSL_UNTRUSTED"
-        SslError.SSL_EXPIRED -> "SSL_EXPIRED"
-        SslError.SSL_IDMISMATCH -> "SSL_IDMISMATCH"
-        SslError.SSL_DATE_INVALID -> "SSL_DATE_INVALID"
+        SSL_NOT_YET_VALIDATED -> "SSL_NOTYETVALIDATED"
+        SSL_UNTRUSTED -> "SSL_UNTRUSTED"
+        SSL_EXPIRED -> "SSL_EXPIRED"
+        SSL_IDMISMATCH -> "SSL_IDMISMATCH"
+        SSL_DATE_INVALID -> "SSL_DATE_INVALID"
+        SSL_INVALID -> "SSL_INVALID"
         else -> "UNKNOWN($error)"
     }
 }

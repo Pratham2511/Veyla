@@ -1,7 +1,6 @@
 package com.pratham.webhub.security
 
 import android.content.Context
-import android.os.CancellationSignal
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Log
@@ -46,7 +45,7 @@ class BiometricAuthManager @Inject constructor(
             BiometricManager.Authenticators.BIOMETRIC_STRONG or
                     BiometricManager.Authenticators.DEVICE_CREDENTIAL
         )
-        return result == BiometricManager.BIometricManagerCompat.BIOMETRIC_SUCCESS
+        return result == BiometricManager.BIOMETRIC_SUCCESS
     }
 
     /**
@@ -114,8 +113,6 @@ class BiometricAuthManager @Inject constructor(
     ): Boolean = withContext(Dispatchers.Main) {
         suspendCancellableCoroutine { continuation ->
             val executor = Executor { it.run() }
-            val cancellationSignal = CancellationSignal()
-
             val promptInfo = BiometricPrompt.PromptInfo.Builder()
                 .setTitle(promptTitle)
                 .setSubtitle(promptSubtitle.ifBlank { null })
@@ -153,11 +150,7 @@ class BiometricAuthManager @Inject constructor(
                     }
                 )
 
-                continuation.invokeOnCancellation {
-                    cancellationSignal.cancel()
-                }
-
-                prompt.authenticate(promptInfo, cryptoObject, cancellationSignal)
+                prompt.authenticate(promptInfo, cryptoObject)
             } catch (e: Exception) {
                 Log.e(TAG, "Error initializing biometric prompt", e)
                 if (continuation.isActive) continuation.resume(false)

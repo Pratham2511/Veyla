@@ -65,6 +65,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -343,10 +344,22 @@ fun MainScreen(
                 ) {
                     val currentWebView = webView
                     if (currentWebView != null && activeTab != null && !activeTab.isHibernated) {
-                        AndroidView(
-                            factory = { currentWebView },
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        // key() forces AndroidView to recreate when switching tabs,
+                        // ensuring the correct WebView is attached to the composition tree.
+                        // The WebViewManager owns the WebView lifecycle; AndroidView only manages
+                        // view-hierarchy attachment. When the key changes, Compose disposes
+                        // the old AndroidView (removing the previous WebView from the hierarchy)
+                        // and creates a new one (attaching the new WebView).
+                        key(activeTab.id) {
+                            AndroidView(
+                                factory = { ctx ->
+                                    // Safety: remove from any stale parent before re-attaching
+                                    (currentWebView.parent as? android.view.ViewGroup)?.removeView(currentWebView)
+                                    currentWebView
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     } else if (activeTab?.isHibernated == true) {
                         HibernatedTabPlaceholder(
                             tab = activeTab,

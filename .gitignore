@@ -54,6 +54,8 @@ mini-services/
 tests/
 skills/
 test
+!android/app/src/test/
+!android/app/src/androidTest/
 prompt
 
 # Android
