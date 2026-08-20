@@ -1,3 +1,147 @@
+     1→package com.pratham.webhub.ui.main
+     2→
+     3→import android.annotation.SuppressLint
+     4→import android.view.ViewGroup
+     5→import android.webkit.WebView
+     6→import android.widget.FrameLayout
+     7→import androidx.activity.compose.BackHandler
+     8→import androidx.compose.foundation.ExperimentalFoundationApi
+     9→import androidx.compose.foundation.background
+    10→import androidx.compose.foundation.clickable
+    11→import androidx.compose.foundation.combinedClickable
+    12→import androidx.compose.foundation.layout.Arrangement
+    13→import androidx.compose.foundation.layout.Box
+    14→import androidx.compose.foundation.layout.Column
+    15→import androidx.compose.foundation.layout.PaddingValues
+    16→import androidx.compose.foundation.layout.Row
+    17→import androidx.compose.foundation.layout.Spacer
+    18→import androidx.compose.foundation.layout.fillMaxHeight
+    19→import androidx.compose.foundation.layout.fillMaxSize
+    20→import androidx.compose.foundation.layout.fillMaxWidth
+    21→import androidx.compose.foundation.layout.height
+    22→import androidx.compose.foundation.layout.navigationBarsPadding
+    23→import androidx.compose.foundation.layout.padding
+    24→import androidx.compose.foundation.layout.size
+    25→import androidx.compose.foundation.layout.statusBarsPadding
+    26→import androidx.compose.foundation.layout.width
+    27→import androidx.compose.foundation.lazy.LazyColumn
+    28→import androidx.compose.foundation.lazy.items
+    29→import androidx.compose.foundation.shape.CircleShape
+    30→import androidx.compose.foundation.shape.RoundedCornerShape
+    31→import androidx.compose.foundation.text.BasicTextField
+    32→import androidx.compose.foundation.text.KeyboardActions
+    33→import androidx.compose.foundation.text.KeyboardOptions
+    34→import androidx.compose.material.icons.Icons
+    35→import androidx.compose.material.icons.filled.Add
+    36→import androidx.compose.material.icons.filled.CheckCircle
+    37→import androidx.compose.material.icons.filled.DarkMode
+    38→import androidx.compose.material.icons.filled.Edit
+    39→import androidx.compose.material.icons.filled.Folder
+    40→import androidx.compose.material.icons.filled.History
+    41→import androidx.compose.material.icons.filled.Tab
+    42→import androidx.compose.material.icons.filled.ViewAgenda
+    43→import androidx.compose.material3.DrawerValue
+    44→import androidx.compose.material3.ExperimentalMaterial3Api
+    45→import androidx.compose.material3.FloatingActionButton
+    46→import androidx.compose.material3.FloatingActionButtonDefaults
+    47→import androidx.compose.material3.HorizontalDivider
+    48→import androidx.compose.material3.Icon
+    49→import androidx.compose.material3.IconButton
+    50→import androidx.compose.material3.MaterialTheme
+    51→import androidx.compose.material3.ModalDrawerSheet
+    52→import androidx.compose.material3.ModalNavigationDrawer
+    53→import androidx.compose.material3.NavigationDrawerItem
+    54→import androidx.compose.material3.NavigationDrawerItemDefaults
+    55→import androidx.compose.material3.Scaffold
+    56→import androidx.compose.material3.ScaffoldDefaults
+    57→import androidx.compose.material3.SnackbarHost
+    58→import androidx.compose.material3.SnackbarHostState
+    59→import androidx.compose.material3.Surface
+    60→import androidx.compose.material3.Text
+    61→import androidx.compose.material3.TextButton
+    62→import androidx.compose.material3.TopAppBar
+    63→import androidx.compose.material3.TopAppBarDefaults
+    64→import androidx.compose.material3.TopAppBarScrollBehavior
+    65→import androidx.compose.material3.rememberDrawerState
+    66→import androidx.compose.material3.rememberTopAppBarState
+    67→import androidx.compose.runtime.Composable
+    68→import androidx.compose.runtime.LaunchedEffect
+    69→import androidx.compose.runtime.collectAsStateWithLifecycle
+    70→import androidx.compose.runtime.getValue
+    71→import androidx.compose.runtime.mutableStateOf
+    72→import androidx.compose.runtime.remember
+    73→import androidx.compose.runtime.rememberCoroutineScope
+    74→import androidx.compose.runtime.setValue
+    75→import androidx.compose.ui.Alignment
+    76→import androidx.compose.ui.Modifier
+    77→import androidx.compose.ui.draw.alpha
+    78→import androidx.compose.ui.graphics.Color
+    79→import androidx.compose.ui.graphics.vector.ImageVector
+    80→import androidx.compose.ui.input.nestedscroll.nestedScroll
+    81→import androidx.compose.ui.text.font.FontWeight
+    82→import androidx.compose.ui.text.input.ImeAction
+    83→import androidx.compose.ui.text.style.TextOverflow
+    84→import androidx.compose.ui.unit.dp
+    85→import androidx.compose.ui.unit.sp
+    86→import androidx.compose.ui.viewinterop.AndroidView
+    87→import androidx.compose.ui.window.Dialog
+    88→import androidx.compose.ui.window.DialogProperties
+    89→import androidx.hilt.navigation.compose.hiltViewModel
+    90→import com.pratham.webhub.domain.model.Tab
+    91→import com.pratham.webhub.domain.model.Workspace
+    92→import com.pratham.webhub.ui.addtab.AddTabViewModel
+    93→import com.pratham.webhub.ui.browser.BrowserUiState
+    94→import com.pratham.webhub.ui.browser.BrowserViewModel
+    95→import com.pratham.webhub.ui.components.Omnibox
+    96→import com.pratham.webhub.ui.components.TabStrip
+    97→import com.pratham.webhub.ui.theme.IncognitoTint
+    98→import com.pratham.webhub.ui.workspace.WorkspaceViewModel
+    99→import com.pratham.webhub.util.UrlNormalizer
+   100→import kotlinx.coroutines.launch
+   101→
+   102→// ─────────────────────────────────────────────────────────────────────────────
+   103→// MainScreen – the primary browser screen that orchestrates the entire app.
+   104→// ─────────────────────────────────────────────────────────────────────────────
+   105→
+   106→/**
+   107→ * The top-level browser screen that hosts the [Omnibox], WebView content,
+   108→ * [TabStrip], and all overlay bottom-sheets / dialogs.
+   109→ *
+   110→ * This composable is the primary entry point after onboarding and is
+   111→ * responsible for orchestrating the [MainViewModel] (tab & workspace
+   112→ * management) with the [BrowserViewModel] (WebView rendering).
+   113→ *
+   114→ * @param initialUrl          An optional URL from a share-intent or deep link.
+   115→ * @param onNavigateToBookmarks Callback to navigate to the bookmarks screen.
+   116→ * @param onNavigateToSettings  Callback to navigate to the settings screen.
+   117→ */
+   118→@OptIn(ExperimentalMaterial3Api::class)
+   119→@SuppressLint("SetJavaScriptEnabled")
+   120→@Composable
+   121→fun MainScreen(
+   122→    initialUrl: String? = null,
+   123→    onNavigateToBookmarks: () -> Unit = {},
+   124→    onNavigateToSettings: () -> Unit = {},
+   125→    mainViewModel: MainViewModel = hiltViewModel(),
+   126→    browserViewModel: BrowserViewModel = hiltViewModel(),
+   127→) {
+   128→    val uiState by mainViewModel.state.collectAsStateWithLifecycle()
+   129→    val browserState by browserViewModel.state.collectAsStateWithLifecycle()
+   130→    val webView by browserViewModel.webView.collectAsStateWithLifecycle()
+   131→    val customView by browserViewModel.customView.collectAsStateWithLifecycle()
+   132→
+   133→    val coroutineScope = rememberCoroutineScope()
+   134→    val snackbarHostState = remember { SnackbarHostState() }
+   135→
+   136→    // ── Handle initial URL from share intent / deep link ────────────
+   137→    val initialUrlHandled = remember { mutableStateOf(false) }
+   138→    LaunchedEffect(initialUrl) {
+   139→        if (!initialUrlHandled.value && !initialUrl.isNullOrBlank()) {
+   140→            mainViewModel.onEvent(MainEvent.AddTab(initialUrl, null))
+   141→            initialUrlHandled.value = true
+   142→        }
+   143→    }
+   144→
    145→    // ── Track active tab changes and attach to browser ──────────────
    146→    val activeTab = uiState.activeTab
    147→    LaunchedEffect(activeTab?.id) {
