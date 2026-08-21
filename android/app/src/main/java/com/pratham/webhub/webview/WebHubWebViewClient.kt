@@ -50,6 +50,7 @@ class WebHubWebViewClient(
     override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
         isLoading = true
+        Log.d(TAG, "onPageStarted tab=$tabId url=$url")
         if (!url.isNullOrEmpty()) {
             onUrlChanged(tabId, url)
         }
@@ -58,6 +59,7 @@ class WebHubWebViewClient(
     override fun onPageFinished(view: WebView, url: String?) {
         super.onPageFinished(view, url)
         isLoading = false
+        Log.d(TAG, "onPageFinished tab=$tabId url=$url")
         onPageFinished(tabId)
         if (!url.isNullOrEmpty()) {
             onUrlChanged(tabId, url)
@@ -73,6 +75,7 @@ class WebHubWebViewClient(
             } else {
                 "Failed to load page"
             }
+            Log.w(TAG, "Main-frame error on tab $tabId: $errorMsg (url=${request.url})")
             onError(tabId, errorMsg)
         }
     }
@@ -80,7 +83,22 @@ class WebHubWebViewClient(
     @Suppress("DEPRECATION")
     override fun onReceivedError(view: WebView, errorCode: Int, description: String?, failingUrl: String?) {
         super.onReceivedError(view, errorCode, description, failingUrl)
+        Log.w(TAG, "Legacy error on tab $tabId: ${description ?: "Unknown"} (code=$errorCode, url=$failingUrl)")
         onError(tabId, description ?: "Unknown error (code: $errorCode)")
+    }
+
+    override fun onReceivedHttpError(
+        view: WebView,
+        request: WebResourceRequest,
+        errorResponse: android.webkit.WebResourceResponse
+    ) {
+        super.onReceivedHttpError(view, request, errorResponse)
+        if (request.isForMainFrame) {
+            val statusCode = errorResponse.statusCode
+            val reason = errorResponse.reasonPhrase ?: "HTTP $statusCode"
+            Log.w(TAG, "HTTP error on tab $tabId: $statusCode $reason (url=${request.url})")
+            onError(tabId, "HTTP $statusCode: $reason")
+        }
     }
 
     override fun onReceivedSslError(view: WebView, handler: android.webkit.SslErrorHandler, error: android.net.http.SslError) {

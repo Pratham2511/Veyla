@@ -25,6 +25,8 @@ class SettingsRepositoryImpl @Inject constructor(
         val AD_BLOCK_ENABLED = booleanPreferencesKey("ad_block_enabled")
         val SEARCH_ENGINE_URL = stringPreferencesKey("search_engine_url")
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
+        val JS_ENABLED = booleanPreferencesKey("js_enabled")
+        val AUTO_RESTORE_LAST_SESSION = booleanPreferencesKey("auto_restore_last_session")
     }
 
     override fun getSettings(): Flow<AppSettings> {
@@ -37,7 +39,9 @@ class SettingsRepositoryImpl @Inject constructor(
                 adBlockEnabled = prefs[Keys.AD_BLOCK_ENABLED] ?: true,
                 searchEngineUrl = prefs[Keys.SEARCH_ENGINE_URL]
                     ?: "https://www.google.com/search?q=",
-                hasCompletedOnboarding = prefs[Keys.ONBOARDING_COMPLETED] ?: false
+                hasCompletedOnboarding = prefs[Keys.ONBOARDING_COMPLETED] ?: false,
+                isJsEnabled = prefs[Keys.JS_ENABLED] ?: true,
+                autoRestoreLastSession = prefs[Keys.AUTO_RESTORE_LAST_SESSION] ?: false
             )
         }
     }
@@ -89,6 +93,18 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun updateOnboardingCompleted(completed: Boolean) {
         dataStore.edit { prefs ->
             prefs[Keys.ONBOARDING_COMPLETED] = completed
+        }
+    }
+
+    override suspend fun updateJsEnabled(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[Keys.JS_ENABLED] = enabled
+        }
+    }
+
+    override suspend fun updateAutoRestoreLastSession(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[Keys.AUTO_RESTORE_LAST_SESSION] = enabled
         }
     }
 }

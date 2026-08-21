@@ -11,12 +11,16 @@ class AddTabUseCase @Inject constructor(
         url: String,
         title: String? = null,
         faviconUrl: String? = null,
-        customName: String? = null
+        customName: String? = null,
+        isJsEnabled: Boolean = true,
+        isAdBlockEnabled: Boolean = true
     ): String = repository.addTab(
         workspaceId = workspaceId,
         url = url,
         title = title,
         faviconUrl = faviconUrl,
-        customName = customName
+        customName = customName,
+        isJsEnabled = isJsEnabled,
+        isAdBlockEnabled = isAdBlockEnabled
     )
 }

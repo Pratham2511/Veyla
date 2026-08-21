@@ -5,6 +5,12 @@ import android.view.ViewGroup
 import android.webkit.WebView
 import android.widget.FrameLayout
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,9 +39,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tab
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material3.DrawerValue
@@ -57,11 +65,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -75,8 +79,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -89,8 +93,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.pratham.webhub.domain.model.Tab
 import com.pratham.webhub.domain.model.Workspace
 import com.pratham.webhub.ui.addtab.AddTabSheet
-import com.pratham.webhub.ui.addtab.AddTabViewModel
-import com.pratham.webhub.ui.addtab.TabCreationParams
 import com.pratham.webhub.ui.browser.BrowserUiState
 import com.pratham.webhub.ui.browser.BrowserViewModel
 import com.pratham.webhub.ui.components.Omnibox
@@ -98,9 +100,7 @@ import com.pratham.webhub.ui.components.QuickSwitcherOverlay
 import com.pratham.webhub.ui.components.RecentlyClosedSheet
 import com.pratham.webhub.ui.components.TabStrip
 import com.pratham.webhub.ui.overview.TabOverviewScreen
-import com.pratham.webhub.ui.overview.TabOverviewViewModel
 import com.pratham.webhub.ui.workspace.WorkspaceSwitcherSheet
-import com.pratham.webhub.ui.workspace.WorkspaceViewModel
 import com.pratham.webhub.util.UrlNormalizer
 import kotlinx.coroutines.launch
 
@@ -111,10 +111,6 @@ import kotlinx.coroutines.launch
 /**
  * The top-level browser screen that hosts the [Omnibox], WebView content,
  * [TabStrip], and all overlay bottom-sheets / dialogs.
- *
- * This composable is the primary entry point after onboarding and is
- * responsible for orchestrating the [MainViewModel] (tab & workspace
- * management) with the [BrowserViewModel] (WebView rendering).
  *
  * @param initialUrl          An optional URL from a share-intent or deep link.
  * @param onNavigateToBookmarks Callback to navigate to the bookmarks screen.
@@ -148,6 +144,16 @@ fun MainScreen(
     }
 
     // ── Track active tab changes and attach to browser ──────────────
+    //
+    // IMPORTANT: We deliberately do NOT call detachTab() when activeTab
+    // becomes null. During tab creation there is a brief moment where
+    // activeTabId is set but the tab-list Flow hasn't emitted yet, so
+    // activeTab is transiently null. Calling detachTab() in that window
+    // would clear _webView.value prematurely and cause the Compose layer
+    // to flicker / lose the WebView reference. The original code (which
+    // worked) only called attachTab when activeTab was non-null, and
+    // relied on attachTab's internal `if (currentTabId == tabId) return`
+    // guard to prevent double-attach. We preserve that behavior.
     val activeTab = uiState.activeTab
     LaunchedEffect(activeTab?.id) {
         if (activeTab != null && !activeTab.isHibernated) {
@@ -160,10 +166,7 @@ fun MainScreen(
         activeTab?.let { mainViewModel.refreshBookmarkStatus(it.url) }
     }
 
-    // ── Scroll behaviour for TopAppBar ──────────────────────────────
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-
-    // ── Drawer state for workspace rail (wide screens / all screens) ─
+    // ── Drawer state for workspace rail ─────────────────────────────
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     // ── Menu expansion state ────────────────────────────────────────
@@ -190,6 +193,9 @@ fun MainScreen(
                 browserViewModel.goBack()
             }
             activeTab != null -> {
+                // User pressed back on a tab with no WebView history.
+                // Close the tab explicitly so its WebView is destroyed.
+                browserViewModel.destroyTab(activeTab.id)
                 mainViewModel.onEvent(MainEvent.CloseTab(activeTab.id))
             }
         }
@@ -204,7 +210,6 @@ fun MainScreen(
             customView = fullscreenView,
             onExitFullscreen = { browserViewModel.exitFullscreen() }
         )
-        // Don't render the rest of the UI while in fullscreen
         return
     }
 
@@ -247,6 +252,10 @@ fun MainScreen(
     // ═══════════════════════════════════════════════════════════════════
     ModalNavigationDrawer(
         drawerState = drawerState,
+        // Disable the drawer's edge-swipe gesture so it doesn't compete
+        // with vertical page scrolling in the WebView. The drawer is
+        // reachable via the folder button in the header.
+        gesturesEnabled = false,
         drawerContent = {
             WorkspaceDrawerContent(
                 workspaces = uiState.workspaces,
@@ -276,13 +285,11 @@ fun MainScreen(
         ) {
             Scaffold(
                 modifier = Modifier
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .navigationBarsPadding(),
                 topBar = {
                     MainTopBar(
                         uiState = uiState,
                         browserState = browserState,
-                        scrollBehavior = scrollBehavior,
                         onUrlSubmit = { input ->
                             val result = UrlNormalizer.normalize(
                                 input,
@@ -318,7 +325,16 @@ fun MainScreen(
                             tabs = uiState.tabs,
                             activeTabId = uiState.activeTabId,
                             onTabSelected = { mainViewModel.onEvent(MainEvent.SelectTab(it)) },
-                            onTabClosed = { mainViewModel.onEvent(MainEvent.CloseTab(it)) },
+                            onTabClosed = { tabId ->
+                                // Destroy the WebView BEFORE the DB delete so
+                                // the manager's map and the Compose layer both
+                                // drop the reference deterministically. This
+                                // is the ONLY place destroyTab is called from
+                                // (besides the back-press handler above) —
+                                // never as a side-effect of recomposition.
+                                browserViewModel.destroyTab(tabId)
+                                mainViewModel.onEvent(MainEvent.CloseTab(tabId))
+                            },
                             onTabLongClick = {
                                 mainViewModel.onEvent(MainEvent.ShowTabOverview)
                             },
@@ -327,10 +343,16 @@ fun MainScreen(
                     }
                 },
                 floatingActionButton = {
-                    ExtendedNewTabFab(
-                        onClick = { mainViewModel.onEvent(MainEvent.ShowAddTab) },
-                        onLongClick = { mainViewModel.onEvent(MainEvent.ShowQuickSwitcher) }
-                    )
+                    // Only show the FAB when there are zero tabs. Once the
+                    // tab strip exists, its own trailing-edge "+" is the
+                    // single source of truth for adding a tab. This avoids
+                    // duplicate "+" buttons.
+                    if (uiState.tabs.isEmpty()) {
+                        ExtendedNewTabFab(
+                            onClick = { mainViewModel.onEvent(MainEvent.ShowAddTab) },
+                            onLongClick = { mainViewModel.onEvent(MainEvent.ShowQuickSwitcher) }
+                        )
+                    }
                 },
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 contentWindowInsets = ScaffoldDefaults.contentWindowInsets
@@ -346,10 +368,6 @@ fun MainScreen(
                     if (currentWebView != null && activeTab != null && !activeTab.isHibernated) {
                         // key() forces AndroidView to recreate when switching tabs,
                         // ensuring the correct WebView is attached to the composition tree.
-                        // The WebViewManager owns the WebView lifecycle; AndroidView only manages
-                        // view-hierarchy attachment. When the key changes, Compose disposes
-                        // the old AndroidView (removing the previous WebView from the hierarchy)
-                        // and creates a new one (attaching the new WebView).
                         key(activeTab.id) {
                             AndroidView(
                                 factory = { ctx ->
@@ -369,6 +387,7 @@ fun MainScreen(
                         )
                     } else {
                         HomePlaceholder(
+                            activeWorkspaceName = uiState.activeWorkspace?.name,
                             onSearch = { query ->
                                 val result = UrlNormalizer.normalize(
                                     query,
@@ -383,7 +402,6 @@ fun MainScreen(
                             onNavigateToBookmarks = onNavigateToBookmarks
                         )
                     }
-
                 }
             }
         }
@@ -451,15 +469,27 @@ fun MainScreen(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TopAppBar with Omnibox
+// Compact header: drawer button + tab-count chip + Omnibox (NO duplicate menu)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Compact header that replaces the previous (empty-title) TopAppBar.
+ *
+ * The old layout wasted ~64dp of vertical space above the Omnibox because
+ * the TopAppBar rendered an empty `title` slot plus the default status-bar
+ * inset. This version collapses everything into a single status-bar-padded
+ * Column with a small icon row + the Omnibox.
+ *
+ * NOTE: The Omnibox already has its own trailing three-dot overflow menu
+ * button. We deliberately do NOT add a second MoreVert button here —
+ * doing so would create the duplicate-menu issue reported in Phase 11.
+ * The only overflow menu for browser actions lives inside the Omnibox.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainTopBar(
     uiState: MainUiState,
     browserState: BrowserUiState,
-    scrollBehavior: TopAppBarScrollBehavior,
     onUrlSubmit: (String) -> Unit,
     onBack: () -> Unit,
     onForward: () -> Unit,
@@ -468,54 +498,59 @@ private fun MainTopBar(
     onMenuClick: () -> Unit,
     onDrawerClick: () -> Unit,
 ) {
-    Column {
-        TopAppBar(
-            title = {},
-            navigationIcon = {
-                IconButton(onClick = onDrawerClick) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+    ) {
+        // ── Top icon row: drawer button + tab-count chip ────────────
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp)
+                .padding(horizontal = 4.dp)
+        ) {
+            IconButton(onClick = onDrawerClick) {
+                Icon(
+                    imageVector = Icons.Default.Folder,
+                    contentDescription = "Workspaces",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            // Tab-count chip (informational only — no action)
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.padding(end = 4.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
                     Icon(
-                        imageVector = Icons.Default.Folder,
-                        contentDescription = "Workspaces",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        imageVector = Icons.Default.Tab,
+                        contentDescription = "Tabs",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = "${uiState.tabs.size}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            },
-            actions = {
-                val tabCount = uiState.tabs.size
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier
-                        .padding(end = 4.dp)
-                        .clickable { /* Tab count chip – no action here */ }
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Tab,
-                            contentDescription = "Tabs",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = "$tabCount",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent
-            ),
-            scrollBehavior = scrollBehavior,
-            modifier = Modifier.statusBarsPadding()
-        )
+            }
 
-        // Omnibox below the TopAppBar
+            Spacer(Modifier.weight(1f))
+            // NOTE: No second MoreVert here — the Omnibox below has the
+            // single overflow menu button. Adding one here would duplicate
+            // the three-dot menu (Phase 11 regression).
+        }
+
+        // ── Omnibox below the icon row ──────────────────────────────
         Omnibox(
             url = browserState.currentUrl,
             title = browserState.currentTitle,
@@ -739,89 +774,158 @@ private fun FullscreenVideoOverlay(
 // Home placeholder when no tab content is loaded
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * The empty-state home screen shown when there are zero tabs.
+ *
+ * Design goals (Phase 13 polish):
+ *  - Premium, calm, modern, intentional, branded, lightweight
+ *  - Subtle entrance animation (fade-in) so the screen feels alive
+ *  - Clear primary action: the search/URL field
+ *  - Workspace context shown as a subtle greeting
+ *  - Refined typography hierarchy with the Veyla wordmark
+ *
+ * Deliberately avoids: giant illustrations, excessive cards,
+ * gradient-heavy aesthetics, glowing effects, excessive animation.
+ */
 @Composable
 private fun HomePlaceholder(
+    activeWorkspaceName: String?,
     onSearch: (String) -> Unit,
     onNavigateToBookmarks: () -> Unit,
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
-    Column(
+    // Subtle entrance animation — alpha fade-in.
+    val enterAnim = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        enterAnim.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(
+                durationMillis = 320,
+                delayMillis = 40,
+                easing = FastOutSlowInEasing
+            )
+        )
+    }
+
+    LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp)
+            .padding(horizontal = 28.dp)
+            .alpha(enterAnim.value)
     ) {
-        Text(
-            text = "Veyla",
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = "Search or enter a URL to get started",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        item {
+            Spacer(Modifier.height(40.dp))
 
-        Spacer(Modifier.height(32.dp))
+            // ── Veyla wordmark with refined hierarchy ───────────────
+            Text(
+                text = "Veyla",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(Modifier.height(4.dp))
 
-        // Search input
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-            tonalElevation = 2.dp,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .fillMaxWidth()
+            // ── Workspace context greeting ──────────────────────────
+            val greeting = if (!activeWorkspaceName.isNullOrBlank()) {
+                "Browsing in $activeWorkspaceName"
+            } else {
+                "Your web workspace"
+            }
+            Text(
+                text = greeting,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            // ── Primary action: search/URL field ────────────────────
+            Surface(
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                tonalElevation = 2.dp,
+                shadowElevation = 2.dp,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Default.Folder,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(12.dp))
-                BasicTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    modifier = Modifier.weight(1f),
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.onSurface
-                    ),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Search
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            if (searchQuery.isNotBlank()) {
-                                onSearch(searchQuery)
-                                searchQuery = ""
-                            }
-                        }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 14.dp)
+                        .fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
                     )
+                    Spacer(Modifier.width(12.dp))
+                    BasicTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.weight(1f),
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        singleLine = true,
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Search
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onSearch = {
+                                if (searchQuery.isNotBlank()) {
+                                    onSearch(searchQuery)
+                                    searchQuery = ""
+                                }
+                            }
+                        )
+                    )
+                    if (searchQuery.isNotBlank()) {
+                        Spacer(Modifier.width(4.dp))
+                        IconButton(
+                            onClick = { searchQuery = "" },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // ── Quick-action shortcut ───────────────────────────────
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                ShortcutChip(
+                    label = "Bookmarks",
+                    icon = Icons.Default.CheckCircle,
+                    onClick = onNavigateToBookmarks,
+                    modifier = Modifier.weight(1f)
                 )
             }
-        }
 
-        Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(24.dp))
 
-        // Quick-action shortcuts
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            ShortcutChip(
-                label = "Bookmarks",
-                icon = Icons.Default.CheckCircle,
-                onClick = onNavigateToBookmarks
+            // ── Subtle tip ──────────────────────────────────────────
+            Text(
+                text = "Tip: long-press the New Tab button to switch tabs",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
+
+            Spacer(Modifier.height(40.dp))
         }
     }
 }
@@ -831,15 +935,19 @@ private fun ShortcutChip(
     label: String,
     icon: ImageVector,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceVariant,
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = modifier.clickable(onClick = onClick)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 12.dp)
         ) {
             Icon(
                 imageVector = icon,
@@ -993,5 +1101,3 @@ private fun MenuDialogItem(
         )
     }
 }
-
-

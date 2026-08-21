@@ -1,5 +1,8 @@
 package com.pratham.webhub.ui.settings
 
+import android.util.Log
+import android.webkit.CookieManager
+import android.webkit.WebStorage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pratham.webhub.domain.model.AppSettings
@@ -81,8 +84,40 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    // ── JavaScript (default for new tabs) ────────────────────────────────
+
+    /**
+     * Sets the default JavaScript-enabled state for newly created tabs.
+     * Existing tabs are NOT retroactively reconfigured — they keep the
+     * JS setting they were created with.
+     */
+    fun setJsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateJsEnabled(enabled)
+        }
+    }
+
+    // ── Auto-restore last session ────────────────────────────────────────
+
+    /**
+     * When enabled, Veyla restores the most recent saved session on the
+     * next cold-start. The restore itself is triggered by MainActivity
+     * on launch.
+     */
+    fun setAutoRestoreLastSession(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateAutoRestoreLastSession(enabled)
+        }
+    }
+
     // ── Biometric ────────────────────────────────────────────────────────
 
+    /**
+     * Toggles the biometric lock. The setting is enforced by
+     * [com.pratham.webhub.MainActivity], which gates the entire NavHost
+     * behind a BiometricPrompt on cold-start when `isBiometricEnabled`
+     * is true and the device can authenticate.
+     */
     fun setBiometricEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.updateBiometricEnabled(enabled)
@@ -112,21 +147,33 @@ class SettingsViewModel @Inject constructor(
     // ── Clear Browsing Data ───────────────────────────────────────────────
 
     /**
-     * Clears browsing data by deleting all session snapshots.
-     * In a full implementation this would also clear cookies, cache,
-     * WebStorage, etc. via the [android.webkit.WebStorage] and
-     * [android.webkit.CookieManager] APIs.
+     * Clears browsing data:
+     *  - All saved session snapshots
+     *  - WebView cookies (all hosts)
+     *  - WebStorage (localStorage, IndexedDB, etc.)
+     *  - Ad-block counters
      */
     fun clearBrowsingData() {
         viewModelScope.launch {
             _isClearingData.value = true
             try {
-                // Clear all saved sessions
+                // 1. Delete all saved session snapshots
                 sessionRepository.getSessionSnapshots().first().forEach { session ->
                     sessionRepository.deleteSession(session.id)
                 }
-                // Reset ad-blocker counters
+
+                // 2. Clear WebView cookies (all hosts)
+                val cookieManager = CookieManager.getInstance()
+                cookieManager.removeAllCookies(null)
+                cookieManager.flush()
+
+                // 3. Clear WebStorage (localStorage / IndexedDB / WebSQL)
+                WebStorage.getInstance().deleteAllData()
+
+                // 4. Reset ad-block counters
                 adBlocker.resetBlockedCount()
+            } catch (e: Exception) {
+                Log.w("SettingsViewModel", "clearBrowsingData failed", e)
             } finally {
                 _isClearingData.value = false
             }

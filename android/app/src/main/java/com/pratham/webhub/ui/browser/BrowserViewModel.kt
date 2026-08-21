@@ -177,6 +177,31 @@ class BrowserViewModel @Inject constructor(
         _webView.value = null
     }
 
+    /**
+     * Destroys the WebView owned by [tabId] in the [WebViewManager].
+     *
+     * **MUST** be called ONLY when the user explicitly closes a tab
+     * (e.g. via the tab-strip close button). Never call this as a
+     * side-effect of state synchronization or recomposition — doing so
+     * can race with tab creation and destroy a newly-created WebView
+     * before its page finishes loading, producing the "blank WebView"
+     * regression.
+     *
+     * If [tabId] is the currently attached tab, this also clears the
+     * Compose WebView reference so the UI stops rendering the
+     * now-destroyed WebView.
+     */
+    fun destroyTab(tabId: String) {
+        // If we're destroying the currently attached tab, detach first
+        // so the Compose layer stops referencing it.
+        if (currentTabId == tabId) {
+            currentChromeClient = null
+            currentTabId = null
+            _webView.value = null
+        }
+        webViewManager.destroyWebView(tabId)
+    }
+
     // ── Navigation actions ────────────────────────────────────────────────
 
     fun goBack() {
@@ -197,7 +222,10 @@ class BrowserViewModel @Inject constructor(
 
     fun loadUrl(url: String) {
         val wv = _webView.value ?: return
-        if (url == wv.url) return
+        // Don't skip loading if the URL is the same — the user may be
+        // re-submitting after a failed load, or the WebView's url field
+        // may not yet reflect the actual page. Always call loadUrl to
+        // guarantee the navigation happens.
         wv.loadUrl(url)
     }
 

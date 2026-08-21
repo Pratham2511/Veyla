@@ -229,6 +229,74 @@ The `AndroidView` composable in `MainScreen.kt` uses a `key(activeTab.id)` wrapp
 - When the active tab changes, `key()` forces Compose to dispose the old `AndroidView` (detaching the previous WebView) and create a new one (attaching the new WebView)
 - A safety `parent.removeView()` call in the factory prevents double-attachment issues
 - The active tab's WebView is marked as `protectedTabId` in WebViewManager, so it is never evicted by LRU or memory pressure
+- **Closed tabs have their WebViews deterministically destroyed**: `MainScreen` calls `BrowserViewModel.destroyTab(tabId)` on close. This is the ONLY place `destroyTab` is called (besides the back-press handler). It is NEVER called as a side-effect of recomposition or state synchronization — doing so would race with tab creation and destroy a newly-created WebView before its page finishes loading.
+- **`loadUrl` always calls `WebView.loadUrl`** without the `if (url == wv.url) return` early-return guard. The previous guard could silently swallow a navigation request when the user re-submitted the same URL after a failed load.
+
+---
+
+## Settings — Actual Functional State
+
+| Setting | Status |
+|---|---|
+| Theme (System/Light/Dark) | ✓ Functional — persisted via DataStore, applied through `WebHubTheme` in `MainActivity` |
+| Material You | Informational only — Veyla always follows the system dynamic color theme on Android 12+; no toggle to disable it |
+| Search engine | ✓ Functional — persisted, used by `UrlNormalizer.normalize()` when submitting omnibox queries |
+| Block ads | ✓ Functional — persisted, also toggled live via `AdBlocker.setAdBlockEnabled()` |
+| JavaScript (default for new tabs) | ✓ Functional — persisted as `AppSettings.isJsEnabled`; new tabs inherit this default via `AddTabUseCase` |
+| Biometric lock | ✓ Functional — persisted as `AppSettings.isBiometricEnabled`; `MainActivity` gates the entire NavHost behind a `BiometricPrompt` on cold-start when enabled and the device can authenticate |
+| HTTPS security | Informational — SSL errors are rejected by `WebHubWebViewClient` |
+| Save current session | ✓ Functional — calls `SessionRepository.saveSession()` |
+| Auto-restore last session | ✓ Functional — persisted as `AppSettings.autoRestoreLastSession`; `MainActivity` triggers `AutoRestoreSessionUseCase` on launch when enabled and onboarding is complete |
+| Restore session | ✓ Functional — calls `SessionRepository.restoreSession()` |
+| Delete session | ✓ Functional — calls `SessionRepository.deleteSession()` |
+| Clear browsing data | ✓ Functional — clears saved sessions, WebView cookies (all hosts), WebStorage (localStorage/IndexedDB), and resets ad-block counters |
+
+Every visible setting in the Settings screen actually works. No "fake" toggles remain.
+
+---
+
+## Runtime UX Fixes
+
+### Website loading regression (CRITICAL)
+**Symptom**: After a previous stabilization build, no websites loaded at all.
+**Root cause**: The previous build added a `reapClosedTabs(liveTabIds)` LaunchedEffect that ran on every tab-list change. This could race with tab creation and destroy a newly-created WebView before its page finished loading. Additionally, an `else if (activeTab == null) { detachTab() }` branch was added that fired during the brief moment between `activeTabId` being set and the tab-list Flow emitting, causing unnecessary detaches.
+**Fix**: Removed `reapClosedTabs` entirely. Removed the `detachTab` when activeTab is null. `destroyTab` is now called ONLY from the explicit close callback. Also removed the `if (url == wv.url) return` guard in `loadUrl` so navigation always happens.
+
+### Onboarding flash on relaunch
+**Symptom**: Closing and reopening the app caused the onboarding/theme screen to appear briefly before the main screen.
+**Fix**: Tri-state startup via `produceState<SettingsLoadState>` in `MainActivity`. A calm branded splash is shown while persisted settings are loading — the onboarding screen is never rendered as the default fallback.
+
+### Duplicate "+" buttons
+**Symptom**: Once the first tab was created, two `+` buttons were visible.
+**Fix**: The Scaffold's FAB is now conditionally rendered only when `tabs.isEmpty()`. The single source of truth for adding a tab is the tab-strip's `+` button when tabs exist, and the empty-state FAB when there are zero tabs.
+
+### Duplicate three-dot overflow menus
+**Symptom**: The main browser screen showed two separate three-dot menus.
+**Fix**: The compact header row no longer has a MoreVert button. The single overflow menu for browser actions lives inside the Omnibox (its trailing three-dot icon).
+
+### First tab does not close correctly
+**Symptom**: Closing the only tab left a "stuck" blank tab visible.
+**Fix**: Removed the auto-create-`about:blank` behavior in `MainViewModel.handleCloseTab`. Closing the last tab now transitions cleanly to the `HomePlaceholder` empty state.
+
+### Excess empty space above the URL area
+**Symptom**: A large empty region appeared above the omnibox.
+**Fix**: Replaced the empty-title `TopAppBar` with a compact 44dp icon row (drawer button + tab-count chip) directly followed by the Omnibox. Removed the `nestedScroll` connection from the Scaffold.
+
+### Scroll gesture opens the sidebar
+**Symptom**: Vertical page scrolling near the left edge sometimes opened the workspace drawer.
+**Fix**: `gesturesEnabled = false` on `ModalNavigationDrawer`. The drawer is now reachable only via the explicit folder button in the header.
+
+### Navigation flashing
+**Symptom**: Opening Settings or Bookmarks caused a visible blank flash.
+**Fix**: Added explicit 220ms fade-in / 180ms fade-out transitions to the `NavHost` so no blank intermediate frame is visible between screens.
+
+### Scrolling feels laggy / chunky
+**Symptom**: WebView scrolling was janky and not native-feeling.
+**Fix**: Removed both contributors: (1) the drawer's edge-gesture detector (via `gesturesEnabled = false`); (2) the `nestedScroll` connection on the Scaffold. The WebView now receives native touch events directly.
+
+### Empty main screen felt dry
+**Symptom**: The empty home screen felt visually dry and lacked distinctive identity.
+**Fix**: Redesigned `HomePlaceholder` with: subtle 320ms fade-in entrance animation, workspace-context greeting ("Browsing in [workspace name]"), Veyla wordmark in `displaySmall` typography, refined search field with clear button, single Bookmark shortcut chip, and a contextual tip line. Calm and fast — no large illustrations or gradients.
 
 ---
 
@@ -244,6 +312,18 @@ The `AndroidView` composable in `MainScreen.kt` uses a `key(activeTab.id)` wrapp
 - **PiP requires video sites to use standard HTML5 fullscreen APIs**
 - **Widgets show static content** -- no live data updates
 - **`bundleRelease` with R8** requires a machine with >4 GB available RAM for the JVM heap
+- **Biometric lock is enforced at cold-start only** — it does not re-prompt on app resume from background (configurable in a future revision)
+
+---
+
+## Runtime Verification Status
+
+| Verification | Status | Notes |
+|---|---|---|
+| `./gradlew assembleDebug` | ✅ PASS | Debug APK produced (66 MB) |
+| `./gradlew testDebugUnitTest` | ✅ PASS | 32 tests, 0 failures, 0 errors |
+| `./gradlew lintDebug` | ✅ PASS | 0 errors, ~210 warnings (all deprecation/version notices) |
+| Real-device runtime testing | ⚠ PENDING | The user must install the resulting APK on a real Android device and verify that websites load, tabs close correctly, scrolling is smooth, and no visual flashes occur. The website-loading regression has been root-caused and fixed at the code level, but runtime confirmation on a physical device is required before considering any runtime behavior "verified". |
 
 ---
 

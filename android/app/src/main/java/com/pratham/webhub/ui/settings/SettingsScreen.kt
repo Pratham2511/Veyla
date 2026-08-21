@@ -180,19 +180,15 @@ fun SettingsScreen(
             }
 
             item {
-                // Material You info
+                // Material You info (informational only — Veyla always uses
+                // the system Material You dynamic color on Android 12+; there
+                // is no user-facing toggle to disable it, so we don't render
+                // a misleading "always-on" Switch here anymore).
                 ListItem(
                     headlineContent = { Text("Material You") },
-                    supportingContent = { Text("Follows your system dynamic color theme") },
+                    supportingContent = { Text("Veyla follows your system dynamic color theme automatically") },
                     leadingContent = {
                         Icon(Icons.Default.Palette, contentDescription = null)
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = true,
-                            onCheckedChange = { /* Material You is always on */ },
-                            enabled = false
-                        )
                     }
                 )
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -232,7 +228,7 @@ fun SettingsScreen(
             }
 
             item {
-                // JavaScript toggle (per-tab default)
+                // JavaScript toggle (default for new tabs)
                 ListItem(
                     headlineContent = { Text("JavaScript") },
                     supportingContent = { Text("Enable JavaScript by default for new tabs") },
@@ -241,8 +237,8 @@ fun SettingsScreen(
                     },
                     trailingContent = {
                         Switch(
-                            checked = true, // default is on
-                            onCheckedChange = { /* TODO: Wire to per-tab JS default setting */ }
+                            checked = state.settings.isJsEnabled,
+                            onCheckedChange = { viewModel.setJsEnabled(it) }
                         )
                     }
                 )
@@ -254,7 +250,7 @@ fun SettingsScreen(
                 ListItem(
                     headlineContent = { Text("Clear browsing data") },
                     supportingContent = {
-                        Text("Remove saved sessions and reset ad-block counters")
+                        Text("Remove saved sessions, cookies, web storage, and reset ad-block counters")
                     },
                     leadingContent = {
                         Icon(Icons.Default.DeleteSweep, contentDescription = null)
@@ -342,7 +338,7 @@ fun SettingsScreen(
             }
 
             item {
-                // Auto-restore toggle (informational for now)
+                // Auto-restore toggle (wired to AppSettings.autoRestoreLastSession)
                 ListItem(
                     headlineContent = { Text("Auto-restore last session") },
                     supportingContent = { Text("Automatically restore tabs when Veyla opens") },
@@ -351,8 +347,8 @@ fun SettingsScreen(
                     },
                     trailingContent = {
                         Switch(
-                            checked = false,
-                            onCheckedChange = { /* TODO: Wire to auto-restore setting */ }
+                            checked = state.settings.autoRestoreLastSession,
+                            onCheckedChange = { viewModel.setAutoRestoreLastSession(it) }
                         )
                     }
                 )

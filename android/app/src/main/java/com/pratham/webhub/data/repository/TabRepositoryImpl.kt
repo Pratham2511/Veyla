@@ -36,7 +36,9 @@ class TabRepositoryImpl @Inject constructor(
         url: String,
         title: String?,
         faviconUrl: String?,
-        customName: String?
+        customName: String?,
+        isJsEnabled: Boolean,
+        isAdBlockEnabled: Boolean
     ): String {
         val now = System.currentTimeMillis()
         val existingTabs = tabDao.getTabsByWorkspace(workspaceId).first()
@@ -50,6 +52,8 @@ class TabRepositoryImpl @Inject constructor(
             faviconUrl = faviconUrl,
             customName = customName,
             position = maxPosition + 1,
+            isJsEnabled = isJsEnabled,
+            isAdBlockEnabled = isAdBlockEnabled,
             createdAt = now,
             updatedAt = now
         )

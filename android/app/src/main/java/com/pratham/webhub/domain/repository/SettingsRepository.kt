@@ -20,4 +20,10 @@ interface SettingsRepository {
     suspend fun updateSearchEngineUrl(url: String)
 
     suspend fun updateOnboardingCompleted(completed: Boolean)
+
+    /** Sets the default JavaScript-enabled state for newly created tabs. */
+    suspend fun updateJsEnabled(enabled: Boolean)
+
+    /** Sets whether Veyla restores the last saved session on launch. */
+    suspend fun updateAutoRestoreLastSession(enabled: Boolean)
 }

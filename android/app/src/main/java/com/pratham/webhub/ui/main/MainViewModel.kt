@@ -223,19 +223,21 @@ class MainViewModel @Inject constructor(
 
     private fun handleCloseTab(event: MainEvent.CloseTab) {
         viewModelScope.launch {
-            val wasLastTab = _state.value.tabs.size <= 1
             val closedTabId = event.tabId
 
+            // Close in DB (this also writes a "recently closed" entry).
+            // We do NOT auto-create a new "about:blank" tab here — that was
+            // the previous behavior and it caused the "stuck first tab" bug:
+            // the auto-created blank tab was uncloseable and displayed nothing.
+            // We now allow the workspace to reach a true zero-tab state and
+            // let the UI render HomePlaceholder.
             closeTabUseCase(closedTabId)
 
-            // If we closed the last tab, auto-create a new empty tab
-            if (wasLastTab) {
-                val wsId = _state.value.activeWorkspaceId ?: return@launch
-                val newTabId = addTabUseCase(
-                    workspaceId = wsId,
-                    url = "about:blank"
-                )
-                _state.update { it.copy(activeTabId = newTabId) }
+            // Optimistically clear the activeTabId if we just closed it.
+            // The tab-list Flow will then pick the next tab (or none) on
+            // its next emission.
+            if (_state.value.activeTabId == closedTabId) {
+                _state.update { it.copy(activeTabId = null) }
             }
         }
     }
@@ -243,10 +245,16 @@ class MainViewModel @Inject constructor(
     private fun handleAddTab(event: MainEvent.AddTab) {
         viewModelScope.launch {
             val wsId = _state.value.activeWorkspaceId ?: return@launch
+            // Use the user's persisted settings as the default for new tabs:
+            //  - isJsEnabled (Settings → Browser → JavaScript)
+            //  - adBlockEnabled (Settings → Browser → Block ads)
+            val settings = _state.value.settings
             val newTabId = addTabUseCase(
                 workspaceId = wsId,
                 url = event.url,
-                customName = event.customName
+                customName = event.customName,
+                isJsEnabled = settings.isJsEnabled,
+                isAdBlockEnabled = settings.adBlockEnabled
             )
             _state.update { it.copy(activeTabId = newTabId) }
         }
